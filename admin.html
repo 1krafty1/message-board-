@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Message Board &middot; Admin</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Inter","Segoe UI",system-ui,sans-serif; background: #f4f6f9; color: #1a2b3d; padding: 24px; max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  h1::before { content: "📺 "; }
+  h2 { font-size: 16px; margin-bottom: 14px; }
+  .sub { color: #6b8299; font-size: 14px; margin-bottom: 24px; }
+  .card { background: #fff; border: 1px solid #e3e8ee; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #44607a; }
+  textarea, input, select { width: 100%; font: inherit; padding: 10px 12px; border: 1px solid #d0d8e0; border-radius: 8px; margin-bottom: 14px; background: #fff; }
+  textarea { resize: vertical; min-height: 70px; }
+  .row { display: flex; gap: 14px; } .row > div { flex: 1; }
+  button { font: inherit; font-weight: 600; border: none; border-radius: 8px; padding: 10px 18px; cursor: pointer; }
+  .primary { background: #1b9aaa; color: #fff; } .primary:hover { background: #157d8b; }
+  .ghost { background: #eef2f6; color: #44607a; }
+  .danger { background: #fbeaea; color: #c0392b; }
+  .small { padding: 6px 12px; font-size: 13px; }
+  .item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid #eef2f6; }
+  .item:last-child { border-bottom: none; }
+  .item .body { flex: 1; } .item .body .t { font-weight: 600; margin-bottom: 4px; } .item .body .d { font-size: 13px; color: #6b8299; }
+  .item img.thumb { width: 64px; height: 48px; object-fit: cover; border-radius: 6px; flex: 0 0 auto; }
+  .pin { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 999px; margin-bottom: 6px; }
+  .pin.info { background: #e0f3f6; color: #157d8b; } .pin.alert { background: #fbeaea; color: #c0392b; }
+  .pin.success { background: #e3f6e9; color: #2c8a4a; } .pin.notice { background: #f6f1e0; color: #97861f; }
+  .actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+  .inactive { opacity: 0.5; }
+  .status { font-size: 13px; color: #6b8299; margin-top: 8px; min-height: 18px; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eef2f6; }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-row .lbl { font-weight: 600; font-size: 15px; } .toggle-row .lbl span { display: block; font-weight: 400; font-size: 13px; color: #6b8299; }
+  .switch { position: relative; width: 48px; height: 26px; flex: 0 0 auto; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; inset: 0; background: #cfd8e0; border-radius: 999px; transition: 0.2s; }
+  .slider::before { content: ""; position: absolute; height: 20px; width: 20px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: 0.2s; }
+  .switch input:checked + .slider { background: #1b9aaa; }
+  .switch input:checked + .slider::before { transform: translateX(22px); }
+  .switch.red input:checked + .slider { background: #c0392b; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; position: sticky; top: 0; z-index: 10; background: rgba(244,246,249,0.92); backdrop-filter: blur(6px); padding: 10px 0; }
+  .tab { padding: 8px 16px; border-radius: 8px; background: #eef2f6; color: #44607a; font-weight: 600; cursor: pointer; font-size: 14px; transition: background 0.15s; }
+  .tab:hover { background: #e0e8ef; }
+  .tab.on { background: #1b9aaa; color: #fff; }
+  .preview-wrap { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 10px; overflow: hidden; background: #0d1b2a; border: 1px solid #e3e8ee; }
+  .preview-wrap iframe { width: 200%; height: 200%; transform: scale(0.5); transform-origin: top left; border: 0; pointer-events: none; }
+  .preview-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .preview-bar h2 { margin-bottom: 0; }
+  .pane { display: none; } .pane.on { display: block; }
+  .layout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
+  .layout-opt { border: 2px solid #e3e8ee; border-radius: 10px; padding: 14px; cursor: pointer; transition: 0.15s; }
+  .layout-opt:hover { border-color: #bcd; } .layout-opt.on { border-color: #1b9aaa; background: #f0fafb; }
+  .layout-opt .name { font-weight: 700; margin-bottom: 4px; } .layout-opt .desc { font-size: 12px; color: #6b8299; }
+  .mini { height: 46px; border-radius: 5px; margin-bottom: 10px; display: flex; overflow: hidden; background: #0d1b2a; }
+  .mini .bar { background: #1b9aaa; } .mini .img { background: #3a536b; }
+  .mini .body { flex: 1; display: flex; align-items: center; justify-content: center; color: #5fd0df; font-size: 10px; }
+  .emergency-card { border: 2px solid #f1c6c6; background: #fdf4f4; }
+  .hint { font-size: 12px; color: #6b8299; margin: -8px 0 14px; }
+</style>
+</head>
+<body>
+  <h1>Message Board Admin</h1>
+  <div class="sub">Changes appear on the TV within ~30 seconds.</div>
+
+  <div class="tabs">
+    <div class="tab on" onclick="tab('layout', this)">Layout</div>
+    <div class="tab" onclick="tab('messages', this)">Messages</div>
+    <div class="tab" onclick="tab('photos', this)">Photos</div>
+    <div class="tab" onclick="tab('welcomes', this)">Welcomes</div>
+    <div class="tab" onclick="tab('people', this)">People</div>
+    <div class="tab" onclick="tab('shoutouts', this)">Shoutouts</div>
+  </div>
+
+  <!-- LAYOUT -->
+  <div class="pane on" id="pane-layout">
+    <div class="card">
+      <div class="preview-bar">
+        <h2>Live board preview</h2>
+        <div>
+          <button class="ghost small" onclick="refreshPreview()">Refresh</button>
+          <button class="ghost small" onclick="window.open('display.html','_blank')">Open full</button>
+        </div>
+      </div>
+      <div class="preview-wrap"><iframe id="boardPreview" src="display.html" loading="lazy"></iframe></div>
+      <div class="hint" style="margin-top:8px;">This is the actual board page, scaled down. It refreshes itself every ~30s; hit Refresh to see a change immediately.</div>
+    </div>
+
+    <div class="card emergency-card">
+      <div class="toggle-row" style="border:none;padding-top:0;">
+        <div class="lbl" style="color:#c0392b;">Emergency banner<span>Red banner across the top of the board, board stays visible</span></div>
+        <label class="switch red"><input type="checkbox" id="tg-emergency" onchange="saveSettings()"><span class="slider"></span></label>
+      </div>
+      <label>Banner text</label>
+      <input id="emergencyText" placeholder="e.g. SEVERE WEATHER - SHELTER IN PLACE" onchange="saveSettings()">
+    </div>
+
+    <div class="card">
+      <h2>Active layout</h2>
+      <div class="layout-grid">
+        <div class="layout-opt" id="lo-messages" onclick="setLayout('messages')">
+          <div class="mini"><div class="body">message</div><div class="bar" style="width:100%;height:8px;align-self:flex-end;"></div></div>
+          <div class="name">Messages + strip</div><div class="desc">Rotating messages with the info strip below.</div></div>
+        <div class="layout-opt" id="lo-photo" onclick="setLayout('photo')">
+          <div class="mini"><div class="img" style="width:100%;"></div></div>
+          <div class="name">Full-screen photo</div><div class="desc">Photos fill the screen and rotate.</div></div>
+        <div class="layout-opt" id="lo-split" onclick="setLayout('split')">
+          <div class="mini"><div class="img" style="width:50%;"></div><div class="body">message</div></div>
+          <div class="name">Split</div><div class="desc">Photo left, top message right.</div></div>
+        <div class="layout-opt" id="lo-photobg" onclick="setLayout('photobg')">
+          <div class="mini" style="position:relative;"><div class="img" style="width:100%;"></div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;">message</div></div>
+          <div class="name">Photo background</div><div class="desc">Message over a full-screen photo.</div></div>
+      </div>
+      <div class="status" id="layoutStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>Bottom strip panels <span style="font-weight:400;font-size:13px;color:#6b8299;">(Messages layout only)</span></h2>
+      <div class="toggle-row"><div class="lbl">Weather<span>Current conditions for Grand Forks</span></div>
+        <label class="switch"><input type="checkbox" id="tg-weather" onchange="saveSettings()"><span class="slider"></span></label></div>
+      <div class="toggle-row"><div class="lbl">APG ticker<span>APi Group stock price</span></div>
+        <label class="switch"><input type="checkbox" id="tg-ticker" onchange="saveSettings()"><span class="slider"></span></label></div>
+      <div class="toggle-row"><div class="lbl">Radar<span>Live precipitation map for Grand Forks</span></div>
+        <label class="switch"><input type="checkbox" id="tg-radar" onchange="saveSettings()"><span class="slider"></span></label></div>
+      <div class="toggle-row"><div class="lbl">Shoutouts<span>Recognition panel &mdash; only approved ones show</span></div>
+        <label class="switch"><input type="checkbox" id="tg-shoutouts" onchange="saveSettings()"><span class="slider"></span></label></div>
+      <div class="toggle-row"><div class="lbl">Welcomes<span>Only shows when there are active welcomes</span></div>
+        <label class="switch"><input type="checkbox" id="tg-welcomes" onchange="saveSettings()"><span class="slider"></span></label></div>
+      <div class="toggle-row"><div class="lbl">Birthdays &amp; anniversaries<span>Auto-celebrates on the day (from the People tab)</span></div>
+        <label class="switch"><input type="checkbox" id="tg-birthdays" onchange="saveSettings()"><span class="slider"></span></label></div>
+      <div class="toggle-row"><div class="lbl">Countdown<span>Days until a date</span></div>
+        <label class="switch"><input type="checkbox" id="tg-countdown" onchange="saveSettings()"><span class="slider"></span></label></div>
+      <div class="row">
+        <div><label>Countdown label</label><input id="countdownLabel" placeholder="e.g. Koppy Kup Classic" onchange="saveSettings()"></div>
+        <div><label>Countdown date</label><input id="countdownDate" type="date" onchange="saveSettings()"></div>
+      </div>
+      <div class="status" id="setStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>Auto-rotate layouts</h2>
+      <div class="toggle-row" style="padding-top:0;">
+        <div class="lbl">Cycle through layouts automatically<span>When on, the board rotates the chosen layouts instead of using the single one selected above</span></div>
+        <label class="switch"><input type="checkbox" id="tg-autorotate" onchange="saveSettings()"><span class="slider"></span></label>
+      </div>
+      <label>Include these layouts (pick 2+)</label>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
+        <label style="font-weight:400;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="ar-messages" style="width:auto;margin:0;" onchange="saveSettings()"> Messages</label>
+        <label style="font-weight:400;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="ar-photo" style="width:auto;margin:0;" onchange="saveSettings()"> Full-screen photo</label>
+        <label style="font-weight:400;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="ar-split" style="width:auto;margin:0;" onchange="saveSettings()"> Split</label>
+        <label style="font-weight:400;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="ar-photobg" style="width:auto;margin:0;" onchange="saveSettings()"> Photo background</label>
+      </div>
+      <label>Seconds on each layout</label>
+      <input id="autorotateSeconds" type="number" min="8" max="600" placeholder="30" onchange="saveSettings()">
+      <div class="hint">Auto-rotate overrides the single layout picker above while it's on.</div>
+      <div class="status" id="autoStatus"></div>
+    </div>
+  </div>
+
+  <!-- MESSAGES -->
+  <div class="pane" id="pane-messages">
+    <div class="card">
+      <label>Message</label>
+      <textarea id="text" placeholder="Type the message that shows on the TV..."></textarea>
+      <div class="row">
+        <div><label>Type</label><select id="type">
+          <option value="info">Info (teal)</option><option value="success">Success (green)</option>
+          <option value="notice">Notice (yellow)</option><option value="alert">Alert (red)</option></select></div>
+        <div><label>Label (optional pill)</label><input id="mlabel" placeholder="e.g. HEADS UP"></div>
+        <div><label>Priority</label><select id="priority"><option value="0">Normal</option><option value="1">High (shows first)</option></select></div>
+      </div>
+      <div class="row">
+        <div><label>Show from (optional)</label><input id="startAt" type="datetime-local"></div>
+        <div><label>Show until (optional)</label><input id="endAt" type="datetime-local"></div>
+      </div>
+      <label>Repeat on days (optional &mdash; makes this a recurring message)</label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+        <label style="font-weight:400;display:flex;align-items:center;gap:5px;"><input type="checkbox" class="dow" value="1" style="width:auto;margin:0;"> Mon</label>
+        <label style="font-weight:400;display:flex;align-items:center;gap:5px;"><input type="checkbox" class="dow" value="2" style="width:auto;margin:0;"> Tue</label>
+        <label style="font-weight:400;display:flex;align-items:center;gap:5px;"><input type="checkbox" class="dow" value="3" style="width:auto;margin:0;"> Wed</label>
+        <label style="font-weight:400;display:flex;align-items:center;gap:5px;"><input type="checkbox" class="dow" value="4" style="width:auto;margin:0;"> Thu</label>
+        <label style="font-weight:400;display:flex;align-items:center;gap:5px;"><input type="checkbox" class="dow" value="5" style="width:auto;margin:0;"> Fri</label>
+        <label style="font-weight:400;display:flex;align-items:center;gap:5px;"><input type="checkbox" class="dow" value="6" style="width:auto;margin:0;"> Sat</label>
+        <label style="font-weight:400;display:flex;align-items:center;gap:5px;"><input type="checkbox" class="dow" value="0" style="width:auto;margin:0;"> Sun</label>
+      </div>
+      <div class="row">
+        <div><label>From time (optional)</label><input id="timeStart" type="time"></div>
+        <div><label>Until time (optional)</label><input id="timeEnd" type="time"></div>
+      </div>
+      <div class="hint">Tick days to repeat weekly (e.g. Mon + Wed for a safety reminder). Times are optional and apply on those days.</div>
+      <label>QR code link (optional)</label>
+      <input id="qrUrl" placeholder="https://... shows a scannable code next to the message">
+      <button class="primary" id="saveMsgBtn" onclick="saveMessage()">Add message</button>
+      <button class="ghost" id="cancelMsgBtn" onclick="resetMsgForm()" style="display:none;">Cancel edit</button>
+      <div class="status" id="msgStatus"></div>
+    </div>
+    <div class="card"><h2>Current messages</h2><div id="msgList">Loading...</div></div>
+  </div>
+
+  <!-- PHOTOS -->
+  <div class="pane" id="pane-photos">
+    <div class="card">
+      <h2>Add a photo</h2>
+      <label>Upload an image</label><input type="file" id="photoFile" accept="image/*">
+      <label>...or paste an image URL</label><input id="photoUrl" placeholder="https://...">
+      <label>Caption (optional)</label><input id="photoCap" placeholder="Shown on full-screen and photo-background layouts">
+      <button class="primary" id="savePhotoBtn" onclick="savePhoto()">Add photo</button>
+      <div class="status" id="photoStatus"></div>
+    </div>
+    <div class="card"><h2>Photos</h2><div id="photoList">Loading...</div></div>
+  </div>
+
+  <!-- WELCOMES -->
+  <div class="pane" id="pane-welcomes">
+    <div class="card">
+      <label>Name</label><input id="welName" placeholder="e.g. Sarah Johnson">
+      <label>Subtitle (optional)</label><input id="welSub" placeholder="e.g. New IT Technician">
+      <label>Auto-remove after (optional)</label>
+      <select id="welExpire">
+        <option value="">Never (remove manually)</option>
+        <option value="3">3 days</option><option value="7">1 week</option><option value="14">2 weeks</option><option value="30">30 days</option>
+      </select>
+      <button class="primary" id="saveWelBtn" onclick="saveWelcome()">Add welcome</button>
+      <button class="ghost" id="cancelWelBtn" onclick="resetWelForm()" style="display:none;">Cancel edit</button>
+      <div class="status" id="welStatus"></div>
+    </div>
+    <div class="card"><h2>Active welcomes</h2><div id="welList">Loading...</div></div>
+  </div>
+
+  <!-- PEOPLE -->
+  <div class="pane" id="pane-people">
+    <div class="card">
+      <h2>Add a birthday or anniversary</h2>
+      <label>Name</label><input id="pName" placeholder="e.g. Mike Larson">
+      <div class="row">
+        <div><label>Type</label><select id="pKind"><option value="birthday">Birthday</option><option value="anniversary">Work anniversary</option></select></div>
+        <div><label>Month</label><select id="pMonth"></select></div>
+        <div><label>Day</label><select id="pDay"></select></div>
+      </div>
+      <label>Start year (optional, for "X years" on anniversaries)</label>
+      <input id="pYear" type="number" placeholder="e.g. 2019" min="1950" max="2100">
+      <button class="primary" id="savePersonBtn" onclick="savePerson()">Add</button>
+      <button class="ghost" id="cancelPersonBtn" onclick="resetPersonForm()" style="display:none;">Cancel edit</button>
+      <div class="hint">These show in the strip automatically on the day, if "Birthdays &amp; anniversaries" is on in the Layout tab.</div>
+      <div class="status" id="personStatus"></div>
+    </div>
+    <div class="card"><h2>People</h2><div id="peopleList">Loading...</div></div>
+  </div>
+
+  <!-- SHOUTOUTS -->
+  <div class="pane" id="pane-shoutouts">
+    <div class="card">
+      <h2>Add a shoutout</h2>
+      <label>Who's being recognized</label><input id="soRecipient" placeholder="e.g. The night crew / Jenna R.">
+      <label>Message</label><textarea id="soMsg" placeholder="e.g. Went above and beyond on the Anderson install."></textarea>
+      <label>From (optional)</label><input id="soFrom" placeholder="e.g. Randy, or Management">
+      <label style="display:flex;align-items:center;gap:8px;font-weight:400;"><input type="checkbox" id="soApprove" style="width:auto;margin:0;"> Approve immediately (show on board now)</label>
+      <div style="margin-top:12px;">
+        <button class="primary" id="saveSoBtn" onclick="saveShoutout()">Add shoutout</button>
+        <button class="ghost" id="cancelSoBtn" onclick="resetSoForm()" style="display:none;">Cancel edit</button>
+      </div>
+      <div class="hint">Unapproved shoutouts are staged here and won't show until you approve them. Use this to queue several and release on a cadence.</div>
+      <div class="status" id="soStatus"></div>
+    </div>
+    <div class="card"><h2>Shoutouts</h2><div id="soList">Loading...</div></div>
+  </div>
+
+<script>
+/* ============================================================ CONFIG (same as display.html) */
+const SUPABASE_URL = "https://rhtycmrkpjxlfxgyfete.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJodHljbXJrcGp4bGZ4Z3lmZXRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MzcyNTcsImV4cCI6MjA5ODUxMzI1N30.OUOQy6ZBaiXK1rooQre-SLqQxOyqSc9qbU3RWIaQIwM";
+const STORAGE_BUCKET = "board-photos";
+/* ============================================================ */
+
+const H = { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY, "Content-Type": "application/json" };
+const MSG_API = SUPABASE_URL + "/rest/v1/messages";
+const PHOTO_API = SUPABASE_URL + "/rest/v1/photos";
+const WEL_API = SUPABASE_URL + "/rest/v1/welcomes";
+const SET_API = SUPABASE_URL + "/rest/v1/board_settings";
+const PEOPLE_API = SUPABASE_URL + "/rest/v1/people";
+const SO_API = SUPABASE_URL + "/rest/v1/shoutouts";
+
+let editSoId = null;
+
+let editMsgId = null, editWelId = null, editPersonId = null, settingsRowId = null, currentLayout = "messages";
+
+function refreshPreview(){ const f = document.getElementById("boardPreview"); f.src = "display.html?t=" + Date.now(); }
+function tab(name, el) {
+  document.querySelectorAll(".tab").forEach(function (t){ t.classList.remove("on"); });
+  document.querySelectorAll(".pane").forEach(function (p){ p.classList.remove("on"); });
+  el.classList.add("on"); document.getElementById("pane-" + name).classList.add("on");
+}
+function setStatus(id, msg, err){ const e=document.getElementById(id); e.textContent=msg; e.style.color=err?"#c0392b":"#6b8299"; }
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function toISO(v){ return v ? new Date(v).toISOString() : null; }
+function toLocalInput(iso){ if(!iso) return ""; const d=new Date(iso); const p=function(n){return String(n).padStart(2,"0");}; return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":"+p(d.getMinutes()); }
+
+/* populate month/day selects */
+(function initDateSelects(){
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const mo = document.getElementById("pMonth"), da = document.getElementById("pDay");
+  months.forEach(function (m,i){ const o=document.createElement("option"); o.value=i+1; o.textContent=m; mo.appendChild(o); });
+  for (let d=1; d<=31; d++){ const o=document.createElement("option"); o.value=d; o.textContent=d; da.appendChild(o); }
+})();
+
+/* ---------- LAYOUT + SETTINGS ---------- */
+async function loadSettings() {
+  try {
+    const r = await fetch(SET_API + "?select=*&limit=1", { headers: H }); if (!r.ok) throw new Error(); const rows = await r.json();
+    if (rows.length) {
+      const s = rows[0]; settingsRowId = s.id; currentLayout = s.layout || "messages";
+      document.getElementById("tg-weather").checked = !!s.show_weather;
+      document.getElementById("tg-ticker").checked = !!s.show_ticker;
+      document.getElementById("tg-radar").checked = !!s.show_radar;
+      document.getElementById("tg-shoutouts").checked = !!s.show_shoutouts;
+      document.getElementById("tg-welcomes").checked = !!s.show_welcomes;
+      document.getElementById("tg-birthdays").checked = !!s.show_birthdays;
+      document.getElementById("tg-countdown").checked = !!s.show_countdown;
+      document.getElementById("tg-emergency").checked = !!s.emergency_on;
+      document.getElementById("emergencyText").value = s.emergency_text || "";
+      document.getElementById("countdownLabel").value = s.countdown_label || "";
+      document.getElementById("countdownDate").value = s.countdown_date ? s.countdown_date.slice(0,10) : "";
+      document.getElementById("tg-autorotate").checked = !!s.autorotate_on;
+      document.getElementById("autorotateSeconds").value = s.autorotate_seconds || 30;
+      const arSet = (s.autorotate_layouts || "messages,photo").split(",").map(function(x){return x.trim();});
+      ["messages","photo","split","photobg"].forEach(function(l){ document.getElementById("ar-"+l).checked = arSet.indexOf(l) !== -1; });
+      highlightLayout();
+    }
+  } catch (e) { setStatus("setStatus","Could not load settings. Did you run the Wave 1 SQL + seed the row?",true); }
+}
+function highlightLayout(){ ["messages","photo","split","photobg"].forEach(function (l){ document.getElementById("lo-"+l).classList.toggle("on", l===currentLayout); }); }
+async function setLayout(layout){ currentLayout = layout; highlightLayout(); await patchSettings({ layout: layout }, "layoutStatus"); }
+async function saveSettings() {
+  const cd = document.getElementById("countdownDate").value;
+  const arLayouts = ["messages","photo","split","photobg"].filter(function(l){ return document.getElementById("ar-"+l).checked; }).join(",");
+  await patchSettings({
+    show_weather: document.getElementById("tg-weather").checked,
+    show_ticker: document.getElementById("tg-ticker").checked,
+    show_radar: document.getElementById("tg-radar").checked,
+    show_shoutouts: document.getElementById("tg-shoutouts").checked,
+    show_welcomes: document.getElementById("tg-welcomes").checked,
+    show_birthdays: document.getElementById("tg-birthdays").checked,
+    show_countdown: document.getElementById("tg-countdown").checked,
+    emergency_on: document.getElementById("tg-emergency").checked,
+    emergency_text: document.getElementById("emergencyText").value.trim() || null,
+    countdown_label: document.getElementById("countdownLabel").value.trim() || null,
+    countdown_date: cd ? new Date(cd + "T00:00:00").toISOString() : null,
+    autorotate_on: document.getElementById("tg-autorotate").checked,
+    autorotate_layouts: arLayouts || "messages,photo",
+    autorotate_seconds: parseInt(document.getElementById("autorotateSeconds").value,10) || 30
+  }, "setStatus");
+}
+async function patchSettings(payload, statusId) {
+  try {
+    let r;
+    if (settingsRowId) r = await fetch(SET_API + "?id=eq." + settingsRowId, { method:"PATCH", headers:H, body:JSON.stringify(payload) });
+    else { r = await fetch(SET_API, { method:"POST", headers:Object.assign({},H,{Prefer:"return=representation"}), body:JSON.stringify(payload) });
+      if (r.ok){ const rows = await r.json(); if (rows.length) settingsRowId = rows[0].id; } }
+    if (!r.ok) throw new Error(); setStatus(statusId, "Saved. TV updates within ~30s."); refreshPreview();
+  } catch (e) { setStatus(statusId, "Save failed. Check config / RLS policy.", true); }
+}
+
+/* ---------- MESSAGES ---------- */
+async function loadMessages() {
+  try { const r = await fetch(MSG_API + "?select=*&order=priority.desc,created_at.desc", { headers: H }); if (!r.ok) throw new Error(); renderMessages(await r.json()); }
+  catch (e) { document.getElementById("msgList").textContent = "Could not load. Check Supabase config."; }
+}
+function schedNote(m){
+  const bits = [];
+  if (m.days_of_week) { const names={"0":"Sun","1":"Mon","2":"Tue","3":"Wed","4":"Thu","5":"Fri","6":"Sat"};
+    const ds = m.days_of_week.split(",").map(function(x){return names[x.trim()]||x;}).join("/");
+    let t = "repeats " + ds; if (m.time_start || m.time_end) t += " " + (m.time_start||"") + "-" + (m.time_end||""); bits.push(t); }
+  if (m.start_at) bits.push("from " + new Date(m.start_at).toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}));
+  if (m.end_at) bits.push("until " + new Date(m.end_at).toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}));
+  if (m.qr_url) bits.push("QR");
+  return bits.length ? " &middot; " + bits.join(" &middot; ") : "";
+}
+function renderMessages(items) {
+  const list = document.getElementById("msgList");
+  if (!items.length) { list.innerHTML = "<div class='d'>No messages yet.</div>"; return; }
+  list.innerHTML = "";
+  items.forEach(function (m) {
+    const div = document.createElement("div"); div.className = "item" + (m.active ? "" : " inactive");
+    const date = m.created_at ? new Date(m.created_at).toLocaleDateString() : "";
+    div.innerHTML =
+      '<div class="body">' + (m.label ? '<span class="pin ' + (m.type||'info') + '">' + esc(m.label) + '</span><br>' : "") +
+        '<div class="t">' + esc(m.text) + '</div>' +
+        '<div class="d">' + (m.type||'info') + (m.priority?' &middot; high':'') + ' &middot; ' + date + ' &middot; ' + (m.active?'showing':'hidden') + schedNote(m) + '</div></div>' +
+      '<div class="actions">' +
+        '<button class="ghost small" onclick="toggleMsg(\'' + m.id + '\', ' + (!m.active) + ')">' + (m.active?'Hide':'Show') + '</button>' +
+        '<button class="ghost small" onclick=\'editMsg(' + JSON.stringify(m).replace(/'/g,"&#39;") + ')\'>Edit</button>' +
+        '<button class="danger small" onclick="delMsg(\'' + m.id + '\')">Delete</button></div>';
+    list.appendChild(div);
+  });
+}
+async function saveMessage() {
+  const text = document.getElementById("text").value.trim();
+  if (!text) { setStatus("msgStatus","Message can't be empty.",true); return; }
+  const dows = Array.prototype.slice.call(document.querySelectorAll(".dow:checked")).map(function(c){ return c.value; });
+  const payload = {
+    text:text, type:document.getElementById("type").value, label:document.getElementById("mlabel").value.trim()||null,
+    priority:parseInt(document.getElementById("priority").value,10), active:true,
+    start_at: toISO(document.getElementById("startAt").value), end_at: toISO(document.getElementById("endAt").value),
+    qr_url: document.getElementById("qrUrl").value.trim()||null,
+    days_of_week: dows.length ? dows.join(",") : null,
+    time_start: document.getElementById("timeStart").value || null,
+    time_end: document.getElementById("timeEnd").value || null
+  };
+  try {
+    let r;
+    if (editMsgId) r = await fetch(MSG_API + "?id=eq." + editMsgId, { method:"PATCH", headers:H, body:JSON.stringify(payload) });
+    else r = await fetch(MSG_API, { method:"POST", headers:Object.assign({},H,{Prefer:"return=minimal"}), body:JSON.stringify(payload) });
+    if (!r.ok) throw new Error(); setStatus("msgStatus", editMsgId?"Updated.":"Added."); resetMsgForm(); loadMessages();
+  } catch (e) { setStatus("msgStatus","Save failed. Check config / RLS policy.",true); }
+}
+async function toggleMsg(id,on){ await fetch(MSG_API+"?id=eq."+id,{method:"PATCH",headers:H,body:JSON.stringify({active:on})}); loadMessages(); }
+async function delMsg(id){ if(!confirm("Delete this message?"))return; await fetch(MSG_API+"?id=eq."+id,{method:"DELETE",headers:H}); loadMessages(); }
+function editMsg(m){ editMsgId=m.id; document.getElementById("text").value=m.text||""; document.getElementById("type").value=m.type||"info"; document.getElementById("mlabel").value=m.label||""; document.getElementById("priority").value=m.priority||0; document.getElementById("startAt").value=toLocalInput(m.start_at); document.getElementById("endAt").value=toLocalInput(m.end_at); document.getElementById("qrUrl").value=m.qr_url||""; document.getElementById("timeStart").value=m.time_start||""; document.getElementById("timeEnd").value=m.time_end||""; const ds=(m.days_of_week||"").split(","); document.querySelectorAll(".dow").forEach(function(c){ c.checked = ds.indexOf(c.value)!==-1; }); document.getElementById("saveMsgBtn").textContent="Save changes"; document.getElementById("cancelMsgBtn").style.display="inline-block"; window.scrollTo({top:0,behavior:"smooth"}); }
+function resetMsgForm(){ editMsgId=null; ["text","mlabel","startAt","endAt","qrUrl","timeStart","timeEnd"].forEach(function(id){document.getElementById(id).value="";}); document.getElementById("type").value="info"; document.getElementById("priority").value="0"; document.querySelectorAll(".dow").forEach(function(c){ c.checked=false; }); document.getElementById("saveMsgBtn").textContent="Add message"; document.getElementById("cancelMsgBtn").style.display="none"; }
+
+/* ---------- PHOTOS ---------- */
+async function loadPhotos() {
+  try { const r = await fetch(PHOTO_API + "?select=*&order=created_at.desc", { headers: H }); if (!r.ok) throw new Error(); renderPhotos(await r.json()); }
+  catch (e) { document.getElementById("photoList").textContent = "Could not load. Check Supabase config."; }
+}
+function renderPhotos(items) {
+  const list = document.getElementById("photoList");
+  if (!items.length) { list.innerHTML = "<div class='d'>No photos yet.</div>"; return; }
+  list.innerHTML = "";
+  items.forEach(function (p) {
+    const div = document.createElement("div"); div.className = "item" + (p.active ? "" : " inactive");
+    div.innerHTML = '<img class="thumb" src="' + esc(p.url) + '" alt="">' +
+      '<div class="body"><div class="t">' + (p.caption ? esc(p.caption) : '<span style="color:#6b8299;">No caption</span>') + '</div><div class="d">' + (p.active?'showing':'hidden') + '</div></div>' +
+      '<div class="actions"><button class="ghost small" onclick="togglePhoto(\'' + p.id + '\', ' + (!p.active) + ')">' + (p.active?'Hide':'Show') + '</button>' +
+      '<button class="danger small" onclick="delPhoto(\'' + p.id + '\')">Delete</button></div>';
+    list.appendChild(div);
+  });
+}
+async function savePhoto() {
+  const file = document.getElementById("photoFile").files[0]; const urlField = document.getElementById("photoUrl").value.trim();
+  const caption = document.getElementById("photoCap").value.trim() || null;
+  if (!file && !urlField) { setStatus("photoStatus","Upload a file or paste a URL.",true); return; }
+  setStatus("photoStatus","Saving...");
+  try {
+    let url = urlField; if (file) url = await uploadToStorage(file);
+    const r = await fetch(PHOTO_API, { method:"POST", headers:Object.assign({},H,{Prefer:"return=minimal"}), body:JSON.stringify({ url:url, caption:caption, active:true }) });
+    if (!r.ok) throw new Error(); setStatus("photoStatus","Added.");
+    document.getElementById("photoFile").value=""; document.getElementById("photoUrl").value=""; document.getElementById("photoCap").value=""; loadPhotos();
+  } catch (e) { setStatus("photoStatus","Save failed. Check storage bucket + policy.",true); }
+}
+async function uploadToStorage(file) {
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const path = "img_" + Date.now() + "_" + Math.random().toString(36).slice(2,7) + "." + ext;
+  const up = await fetch(SUPABASE_URL + "/storage/v1/object/" + STORAGE_BUCKET + "/" + path, {
+    method: "POST", headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY, "Content-Type": file.type || "application/octet-stream" }, body: file });
+  if (!up.ok) throw new Error("upload failed");
+  return SUPABASE_URL + "/storage/v1/object/public/" + STORAGE_BUCKET + "/" + path;
+}
+async function togglePhoto(id,on){ await fetch(PHOTO_API+"?id=eq."+id,{method:"PATCH",headers:H,body:JSON.stringify({active:on})}); loadPhotos(); }
+async function delPhoto(id){ if(!confirm("Delete this photo? (The stored file stays in the bucket.)"))return; await fetch(PHOTO_API+"?id=eq."+id,{method:"DELETE",headers:H}); loadPhotos(); }
+
+/* ---------- WELCOMES ---------- */
+async function loadWelcomes() {
+  try { const r = await fetch(WEL_API + "?select=*&order=created_at.desc", { headers: H }); if (!r.ok) throw new Error(); renderWelcomes(await r.json()); }
+  catch (e) { document.getElementById("welList").textContent = "Could not load. Check Supabase config."; }
+}
+function renderWelcomes(items) {
+  const list = document.getElementById("welList");
+  if (!items.length) { list.innerHTML = "<div class='d'>No welcomes yet.</div>"; return; }
+  list.innerHTML = "";
+  items.forEach(function (w) {
+    const div = document.createElement("div"); div.className = "item" + (w.active ? "" : " inactive");
+    const exp = w.expires_at ? " &middot; removes " + new Date(w.expires_at).toLocaleDateString() : "";
+    div.innerHTML = '<div class="body"><div class="t">' + esc(w.name) + '</div><div class="d">' + (w.subtitle ? esc(w.subtitle) + ' &middot; ' : '') + (w.active?'showing':'hidden') + exp + '</div></div>' +
+      '<div class="actions"><button class="ghost small" onclick="toggleWel(\'' + w.id + '\', ' + (!w.active) + ')">' + (w.active?'Hide':'Show') + '</button>' +
+      '<button class="ghost small" onclick=\'editWel(' + JSON.stringify(w).replace(/'/g,"&#39;") + ')\'>Edit</button>' +
+      '<button class="danger small" onclick="delWel(\'' + w.id + '\')">Delete</button></div>';
+    list.appendChild(div);
+  });
+}
+async function saveWelcome() {
+  const name = document.getElementById("welName").value.trim();
+  if (!name) { setStatus("welStatus","Name can't be empty.",true); return; }
+  const days = document.getElementById("welExpire").value;
+  let expires = null; if (days) { const d = new Date(); d.setDate(d.getDate() + parseInt(days,10)); expires = d.toISOString(); }
+  const payload = { name:name, subtitle:document.getElementById("welSub").value.trim()||null, active:true, expires_at: expires };
+  try {
+    let r;
+    if (editWelId) r = await fetch(WEL_API + "?id=eq." + editWelId, { method:"PATCH", headers:H, body:JSON.stringify(payload) });
+    else r = await fetch(WEL_API, { method:"POST", headers:Object.assign({},H,{Prefer:"return=minimal"}), body:JSON.stringify(payload) });
+    if (!r.ok) throw new Error(); setStatus("welStatus", editWelId?"Updated.":"Added."); resetWelForm(); loadWelcomes();
+  } catch (e) { setStatus("welStatus","Save failed. Check config / RLS policy.",true); }
+}
+async function toggleWel(id,on){ await fetch(WEL_API+"?id=eq."+id,{method:"PATCH",headers:H,body:JSON.stringify({active:on})}); loadWelcomes(); }
+async function delWel(id){ if(!confirm("Delete this welcome?"))return; await fetch(WEL_API+"?id=eq."+id,{method:"DELETE",headers:H}); loadWelcomes(); }
+function editWel(w){ editWelId=w.id; document.getElementById("welName").value=w.name||""; document.getElementById("welSub").value=w.subtitle||""; document.getElementById("welExpire").value=""; document.getElementById("saveWelBtn").textContent="Save changes"; document.getElementById("cancelWelBtn").style.display="inline-block"; window.scrollTo({top:0,behavior:"smooth"}); }
+function resetWelForm(){ editWelId=null; document.getElementById("welName").value=""; document.getElementById("welSub").value=""; document.getElementById("welExpire").value=""; document.getElementById("saveWelBtn").textContent="Add welcome"; document.getElementById("cancelWelBtn").style.display="none"; }
+
+/* ---------- PEOPLE ---------- */
+async function loadPeople() {
+  try { const r = await fetch(PEOPLE_API + "?select=*&order=month.asc,day.asc", { headers: H }); if (!r.ok) throw new Error(); renderPeople(await r.json()); }
+  catch (e) { document.getElementById("peopleList").textContent = "Could not load. Did you run the Wave 1 SQL?"; }
+}
+function renderPeople(items) {
+  const list = document.getElementById("peopleList");
+  if (!items.length) { list.innerHTML = "<div class='d'>Nobody added yet.</div>"; return; }
+  const months = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  list.innerHTML = "";
+  items.forEach(function (p) {
+    const div = document.createElement("div"); div.className = "item" + (p.active ? "" : " inactive");
+    const when = months[p.month] + " " + p.day + (p.year ? " (" + p.year + ")" : "");
+    div.innerHTML = '<div class="body"><div class="t">' + esc(p.name) + '</div><div class="d">' + (p.kind==="anniversary"?"Work anniversary":"Birthday") + ' &middot; ' + when + ' &middot; ' + (p.active?'active':'hidden') + '</div></div>' +
+      '<div class="actions"><button class="ghost small" onclick="togglePerson(\'' + p.id + '\', ' + (!p.active) + ')">' + (p.active?'Hide':'Show') + '</button>' +
+      '<button class="ghost small" onclick=\'editPerson(' + JSON.stringify(p).replace(/'/g,"&#39;") + ')\'>Edit</button>' +
+      '<button class="danger small" onclick="delPerson(\'' + p.id + '\')">Delete</button></div>';
+    list.appendChild(div);
+  });
+}
+async function savePerson() {
+  const name = document.getElementById("pName").value.trim();
+  if (!name) { setStatus("personStatus","Name can't be empty.",true); return; }
+  const yr = document.getElementById("pYear").value;
+  const payload = { name:name, kind:document.getElementById("pKind").value, month:parseInt(document.getElementById("pMonth").value,10), day:parseInt(document.getElementById("pDay").value,10), year: yr ? parseInt(yr,10) : null, active:true };
+  try {
+    let r;
+    if (editPersonId) r = await fetch(PEOPLE_API + "?id=eq." + editPersonId, { method:"PATCH", headers:H, body:JSON.stringify(payload) });
+    else r = await fetch(PEOPLE_API, { method:"POST", headers:Object.assign({},H,{Prefer:"return=minimal"}), body:JSON.stringify(payload) });
+    if (!r.ok) throw new Error(); setStatus("personStatus", editPersonId?"Updated.":"Added."); resetPersonForm(); loadPeople();
+  } catch (e) { setStatus("personStatus","Save failed. Check config / RLS policy.",true); }
+}
+async function togglePerson(id,on){ await fetch(PEOPLE_API+"?id=eq."+id,{method:"PATCH",headers:H,body:JSON.stringify({active:on})}); loadPeople(); }
+async function delPerson(id){ if(!confirm("Delete this person?"))return; await fetch(PEOPLE_API+"?id=eq."+id,{method:"DELETE",headers:H}); loadPeople(); }
+function editPerson(p){ editPersonId=p.id; document.getElementById("pName").value=p.name||""; document.getElementById("pKind").value=p.kind||"birthday"; document.getElementById("pMonth").value=p.month; document.getElementById("pDay").value=p.day; document.getElementById("pYear").value=p.year||""; document.getElementById("savePersonBtn").textContent="Save changes"; document.getElementById("cancelPersonBtn").style.display="inline-block"; window.scrollTo({top:0,behavior:"smooth"}); }
+function resetPersonForm(){ editPersonId=null; document.getElementById("pName").value=""; document.getElementById("pYear").value=""; document.getElementById("pKind").value="birthday"; document.getElementById("savePersonBtn").textContent="Add"; document.getElementById("cancelPersonBtn").style.display="none"; }
+
+/* ---------- SHOUTOUTS ---------- */
+async function loadShoutouts() {
+  try { const r = await fetch(SO_API + "?select=*&order=created_at.desc", { headers: H }); if (!r.ok) throw new Error(); renderShoutouts(await r.json()); }
+  catch (e) { document.getElementById("soList").textContent = "Could not load. Did you run the Wave 3 SQL?"; }
+}
+function renderShoutouts(items) {
+  const list = document.getElementById("soList");
+  if (!items.length) { list.innerHTML = "<div class='d'>No shoutouts yet.</div>"; return; }
+  list.innerHTML = "";
+  items.forEach(function (s) {
+    const div = document.createElement("div"); div.className = "item" + (s.active ? "" : " inactive");
+    const state = !s.approved ? '<span style="color:#97861f;font-weight:600;">staged</span>' : (s.active ? 'showing' : 'hidden');
+    div.innerHTML =
+      '<div class="body"><div class="t">&#11088; ' + esc(s.recipient) + '</div>' +
+        '<div class="d" style="color:#1a2b3d;margin:2px 0 4px;">' + esc(s.message) + '</div>' +
+        '<div class="d">' + (s.from_name ? "from " + esc(s.from_name) + " &middot; " : "") + state + '</div></div>' +
+      '<div class="actions">' +
+        '<button class="' + (s.approved?'ghost':'primary') + ' small" onclick="approveSo(\'' + s.id + '\', ' + (!s.approved) + ')">' + (s.approved?'Unapprove':'Approve') + '</button>' +
+        '<button class="ghost small" onclick=\'editSo(' + JSON.stringify(s).replace(/'/g,"&#39;") + ')\'>Edit</button>' +
+        '<button class="danger small" onclick="delSo(\'' + s.id + '\')">Delete</button></div>';
+    list.appendChild(div);
+  });
+}
+async function saveShoutout() {
+  const recipient = document.getElementById("soRecipient").value.trim();
+  const message = document.getElementById("soMsg").value.trim();
+  if (!recipient || !message) { setStatus("soStatus","Recipient and message are both required.",true); return; }
+  const payload = { recipient:recipient, message:message, from_name:document.getElementById("soFrom").value.trim()||null, approved:document.getElementById("soApprove").checked, active:true };
+  try {
+    let r;
+    if (editSoId) r = await fetch(SO_API + "?id=eq." + editSoId, { method:"PATCH", headers:H, body:JSON.stringify(payload) });
+    else r = await fetch(SO_API, { method:"POST", headers:Object.assign({},H,{Prefer:"return=minimal"}), body:JSON.stringify(payload) });
+    if (!r.ok) throw new Error(); setStatus("soStatus", editSoId?"Updated.":"Added."); resetSoForm(); loadShoutouts();
+  } catch (e) { setStatus("soStatus","Save failed. Check config / RLS policy.",true); }
+}
+async function approveSo(id,on){ await fetch(SO_API+"?id=eq."+id,{method:"PATCH",headers:H,body:JSON.stringify({approved:on})}); loadShoutouts(); }
+async function delSo(id){ if(!confirm("Delete this shoutout?"))return; await fetch(SO_API+"?id=eq."+id,{method:"DELETE",headers:H}); loadShoutouts(); }
+function editSo(s){ editSoId=s.id; document.getElementById("soRecipient").value=s.recipient||""; document.getElementById("soMsg").value=s.message||""; document.getElementById("soFrom").value=s.from_name||""; document.getElementById("soApprove").checked=!!s.approved; document.getElementById("saveSoBtn").textContent="Save changes"; document.getElementById("cancelSoBtn").style.display="inline-block"; window.scrollTo({top:0,behavior:"smooth"}); }
+function resetSoForm(){ editSoId=null; document.getElementById("soRecipient").value=""; document.getElementById("soMsg").value=""; document.getElementById("soFrom").value=""; document.getElementById("soApprove").checked=false; document.getElementById("saveSoBtn").textContent="Add shoutout"; document.getElementById("cancelSoBtn").style.display="none"; }
+
+/* ---- Boot ---- */
+loadSettings(); loadMessages(); loadPhotos(); loadWelcomes(); loadPeople(); loadShoutouts();
+</script>
+</body>
+</html>

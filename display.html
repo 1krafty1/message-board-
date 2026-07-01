@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Message Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; background: #0d1b2a; color: #e8eef5; font-family: "Inter","Segoe UI",system-ui,sans-serif; overflow: hidden; cursor: none; }
+  body {
+    background:
+      radial-gradient(120vh 90vh at 15% -10%, rgba(27,154,170,0.14), transparent 60%),
+      radial-gradient(100vh 80vh at 90% 110%, rgba(27,154,170,0.10), transparent 55%),
+      linear-gradient(180deg, #0e1d2e 0%, #0a1522 100%);
+  }
+  #stage { height: 100vh; display: flex; flex-direction: column; }
+  #nightdim { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 60s linear; z-index: 99; }
+  #nightdim.on { opacity: 0.45; }
+
+  /* Emergency banner */
+  #emergency {
+    flex: 0 0 auto; display: none; align-items: center; justify-content: center; gap: 2vw;
+    background: #c0192b; color: #fff; padding: 1.6vh 4vw; text-align: center;
+  }
+  #emergency.show { display: flex; }
+  #emergency .sirenicon { font-size: 4vh; }
+  #emergency .etext { font-size: 3.6vh; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase; }
+  #emergency.pulse { animation: epulse 1.6s ease-in-out infinite; }
+  @keyframes epulse { 0%,100% { background:#c0192b; } 50% { background:#9b1322; } }
+
+  header { flex: 0 0 auto; display: flex; align-items: baseline; justify-content: space-between; border-bottom: 2px solid #1b9aaa; padding: 3vh 5vw 2vh; z-index: 5; }
+  header.hidden { display: none; }
+  header .title { font-size: 3vh; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #5fd0df; text-shadow: 0 0 30px rgba(95,208,223,0.35); }
+  header .right { display: flex; align-items: baseline; gap: 2vw; }
+  header .date { font-size: 2.4vh; font-weight: 600; color: #6b8299; text-transform: uppercase; letter-spacing: 0.05em; }
+  header .clock { font-size: 3vh; font-weight: 600; font-variant-numeric: tabular-nums; color: #9fb3c8; }
+
+  #main { flex: 1 1 auto; position: relative; overflow: hidden; }
+  .view { position: absolute; inset: 0; display: none; }
+  .view.show { display: flex; }
+
+  #view-messages { flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 3vh; padding: 4vh 5vw; }
+  .msg { width: 100%; max-width: 90vw; display: flex; flex-direction: column; align-items: center; gap: 2.5vh; }
+  .msg .pin { display: inline-block; font-size: 2.2vh; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.6vh 1.6vh; border-radius: 999px; }
+  .pin.info { background: #143b4a; color: #5fd0df; }
+  .pin.alert { background: #4a1f1f; color: #ff7a7a; }
+  .pin.success { background: #1f4a2c; color: #7affa0; }
+  .pin.notice { background: #3d3a14; color: #ffe07a; }
+  .msg .text { font-size: 6.5vh; line-height: 1.15; font-weight: 700; text-wrap: balance; text-shadow: 0 2px 30px rgba(0,0,0,0.35); }
+  .msg .meta { font-size: 2.4vh; color: #6b8299; }
+  #msg-dots { position: absolute; bottom: 2.5vh; left: 0; right: 0; display: flex; justify-content: center; gap: 1.2vh; }
+  #msg-dots .dot { width: 1.3vh; height: 1.3vh; border-radius: 50%; background: #24405a; transition: background 0.3s, transform 0.3s; }
+  #msg-dots .dot.on { background: #5fd0df; transform: scale(1.25); }
+  .msg .qr { background: #fff; padding: 1.5vh; border-radius: 8px; margin-top: 1vh; }
+  .msg .qr img, .msg .qr canvas { display: block; width: 16vh; height: 16vh; }
+  #empty { font-size: 4vh; color: #44607a; }
+
+  #view-photo { justify-content: center; align-items: center; background: #000; }
+  #view-photo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  #view-photo .cap { position: absolute; bottom: 0; left: 0; right: 0; padding: 4vh 5vw 3vh; font-size: 3.2vh; font-weight: 600; background: linear-gradient(transparent, rgba(0,0,0,0.75)); text-align: center; }
+
+  #view-split { flex-direction: row; }
+  #view-split .ph { flex: 1 1 50%; background: #000 center/cover no-repeat; }
+  #view-split .tx { flex: 1 1 50%; display: flex; flex-direction: column; justify-content: center; padding: 6vh 5vw; gap: 2.5vh; }
+  #view-split .tx .pin { display: inline-block; align-self: flex-start; font-size: 2vh; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.6vh 1.6vh; border-radius: 999px; }
+  #view-split .tx .text { font-size: 5.5vh; line-height: 1.15; font-weight: 700; }
+  #view-split .tx .meta { font-size: 2.4vh; color: #6b8299; }
+
+  #view-photobg { justify-content: center; align-items: center; background: #000 center/cover no-repeat; }
+  #view-photobg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(10,18,30,0.25), rgba(10,18,30,0.85)); }
+  #view-photobg .overlay { position: relative; z-index: 2; text-align: center; padding: 0 6vw; max-width: 92vw; }
+  #view-photobg .overlay .pin { display: inline-block; font-size: 2.2vh; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.6vh 1.6vh; border-radius: 999px; margin-bottom: 2.5vh; }
+  #view-photobg .overlay .text { font-size: 7vh; line-height: 1.12; font-weight: 800; text-shadow: 0 2px 24px rgba(0,0,0,0.6); }
+
+  #strip { flex: 0 0 auto; height: 16vh; border-top: 2px solid #1b9aaa; display: flex; align-items: center; padding: 0 5vw; background: #0a1622; overflow: hidden; }
+  #strip.hidden { display: none; }
+  .panel { width: 100%; display: none; align-items: center; gap: 4vw; }
+  .panel.show { display: flex; }
+  #weather .icon { font-size: 9vh; line-height: 1; }
+  #weather .temp { font-size: 8vh; font-weight: 700; font-variant-numeric: tabular-nums; }
+  #weather .cond { font-size: 3vh; color: #9fb3c8; text-transform: capitalize; }
+  #weather .extra { font-size: 2.4vh; color: #6b8299; margin-top: 0.5vh; }
+  #weather .place { font-size: 2.4vh; color: #5fd0df; text-transform: uppercase; letter-spacing: 0.06em; }
+  #ticker .sym { font-size: 3vh; font-weight: 700; color: #5fd0df; letter-spacing: 0.05em; }
+  #ticker .price { font-size: 8vh; font-weight: 700; font-variant-numeric: tabular-nums; }
+  #ticker .chg { font-size: 4vh; font-weight: 600; font-variant-numeric: tabular-nums; }
+  #ticker .chg.up { color: #7affa0; } #ticker .chg.down { color: #ff7a7a; }
+  #ticker .label { font-size: 2.2vh; color: #6b8299; text-transform: uppercase; letter-spacing: 0.06em; }
+  #welcome { justify-content: center; }
+  #welcome .wave { font-size: 8vh; line-height: 1; }
+  #welcome .wtext { font-size: 6vh; font-weight: 700; }
+  #welcome .wtext .name { color: #5fd0df; }
+  #welcome .wsub { font-size: 2.6vh; color: #9fb3c8; margin-top: 0.5vh; }
+  #countdown { justify-content: center; gap: 3vw; }
+  #countdown .num { font-size: 9vh; font-weight: 800; color: #5fd0df; font-variant-numeric: tabular-nums; }
+  #countdown .unit { font-size: 3vh; color: #9fb3c8; text-transform: uppercase; letter-spacing: 0.06em; }
+  #countdown .clabel { font-size: 3.4vh; font-weight: 600; }
+  #birthday { justify-content: center; gap: 3vw; }
+  #birthday .cake { font-size: 8vh; line-height: 1; }
+  #birthday .btext { font-size: 5vh; font-weight: 700; }
+  #birthday .btext .bname { color: #ffe07a; }
+  #birthday .bsub { font-size: 2.6vh; color: #9fb3c8; margin-top: 0.5vh; }
+  #radar { justify-content: flex-start; gap: 3vw; }
+  #radar .map { width: 22vh; height: 13vh; border-radius: 8px; overflow: hidden; flex: 0 0 auto; border: 1px solid #1b9aaa; }
+  #radar .rlabel { font-size: 2.6vh; font-weight: 600; color: #5fd0df; text-transform: uppercase; letter-spacing: 0.06em; }
+  #radar .rsub { font-size: 2.2vh; color: #6b8299; margin-top: 0.5vh; }
+  .leaflet-control-attribution, .leaflet-control-zoom { display: none !important; }
+  #shoutout { justify-content: flex-start; gap: 3vw; }
+  #shoutout .star { font-size: 8vh; line-height: 1; }
+  #shoutout .slabel { font-size: 2.2vh; font-weight: 700; color: #ffe07a; text-transform: uppercase; letter-spacing: 0.08em; }
+  #shoutout .srecipient { font-size: 4.6vh; font-weight: 800; color: #fff; line-height: 1.1; }
+  #shoutout .smsg { font-size: 2.8vh; color: #cfe0ee; margin-top: 0.5vh; max-width: 70vw; }
+  #shoutout .sfrom { font-size: 2.2vh; color: #6b8299; margin-top: 0.5vh; font-style: italic; }
+
+  .fade-in { animation: fadeIn 0.5s forwards; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .msg.fade-in { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) forwards; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(2.5vh); } to { opacity: 1; transform: translateY(0); } }
+  .panel.show { animation: panelIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
+  @keyframes panelIn { from { opacity: 0; transform: translateX(2vw); } to { opacity: 1; transform: translateX(0); } }
+  @media (prefers-reduced-motion: reduce) { .fade-in, .msg.fade-in, .panel.show { animation: none; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="emergency" class="pulse">
+    <span class="sirenicon">&#9888;&#65039;</span>
+    <span class="etext" id="emergency-text">Emergency</span>
+    <span class="sirenicon">&#9888;&#65039;</span>
+  </div>
+
+  <header id="hdr">
+    <div class="title" id="board-name">Message Board</div>
+    <div class="right"><div class="date" id="hdr-date"></div><div class="clock" id="clock">--:--</div></div>
+  </header>
+
+  <div id="main">
+    <div class="view" id="view-messages"><div id="msg-host"><div id="empty">No messages right now.</div></div><div id="msg-dots"></div></div>
+    <div class="view" id="view-photo"><img id="photo-img" alt=""><div class="cap" id="photo-cap" style="display:none;"></div></div>
+    <div class="view" id="view-split"><div class="ph" id="split-ph"></div><div class="tx" id="split-tx"></div></div>
+    <div class="view" id="view-photobg"><div class="overlay" id="photobg-overlay"></div></div>
+  </div>
+
+  <div id="strip" class="hidden">
+    <div class="panel" id="weather">
+      <div class="icon">&#9925;</div>
+      <div><div class="place" id="w-place">Grand Forks</div>
+        <div style="display:flex; align-items:baseline; gap:1.5vw;"><span class="temp" id="w-temp">--&deg;</span><span class="cond" id="w-cond">&mdash;</span></div>
+        <div class="extra" id="w-extra"></div></div>
+    </div>
+    <div class="panel" id="ticker">
+      <div class="sym" id="t-sym">APG</div><div class="price" id="t-price">--.--</div><div class="chg" id="t-chg">&mdash;</div>
+      <div><div class="label">Prev close</div><div class="label" id="t-prev" style="color:#9fb3c8;">--.--</div></div>
+    </div>
+    <div class="panel" id="welcome">
+      <div class="wave">&#128075;</div>
+      <div><div class="wtext">Welcome, <span class="name" id="wel-name">&mdash;</span></div><div class="wsub" id="wel-sub"></div></div>
+    </div>
+    <div class="panel" id="countdown">
+      <div class="num" id="cd-num">--</div>
+      <div><div class="unit" id="cd-unit">days</div><div class="clabel" id="cd-label">&mdash;</div></div>
+    </div>
+    <div class="panel" id="birthday">
+      <div class="cake">&#127874;</div>
+      <div><div class="btext" id="bd-text">Happy Birthday, <span class="bname">&mdash;</span></div><div class="bsub" id="bd-sub"></div></div>
+    </div>
+    <div class="panel" id="radar">
+      <div class="map" id="radar-map"></div>
+      <div><div class="rlabel">Radar</div><div class="rsub" id="radar-sub">Precipitation &middot; Grand Forks</div></div>
+    </div>
+    <div class="panel" id="shoutout">
+      <div class="star">&#11088;</div>
+      <div><div class="slabel">Shoutout</div>
+        <div class="srecipient" id="so-recipient">&mdash;</div>
+        <div class="smsg" id="so-msg"></div>
+        <div class="sfrom" id="so-from"></div></div>
+    </div>
+  </div>
+</div>
+<div id="nightdim"></div>
+
+<script>
+/* ============================================================ CONFIG */
+const SUPABASE_URL      = "https://rhtycmrkpjxlfxgyfete.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJodHljbXJrcGp4bGZ4Z3lmZXRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MzcyNTcsImV4cCI6MjA5ODUxMzI1N30.OUOQy6ZBaiXK1rooQre-SLqQxOyqSc9qbU3RWIaQIwM";
+const BOARD_NAME = "Message Board";
+const OPENWEATHER_KEY = "5d51c70c7031260a072ce1c7e75cb7c9";
+const WEATHER_LAT = 47.9253, WEATHER_LON = -97.0329, WEATHER_PLACE = "Grand Forks";
+const FINNHUB_KEY = "d92q5t9r01qpou37pfmgd92q5t9r01qpou37pfn0";
+const STOCK_SYMBOL = "APG";
+const MSG_REFRESH_SEC = 30, MSG_ROTATE_SEC = 12, PHOTO_ROTATE_SEC = 10;
+const STRIP_ROTATE_SEC = 10, WEATHER_REFRESH_M = 10, STOCK_REFRESH_M = 5;
+const NIGHT_DIM_START = 21, NIGHT_DIM_END = 6;   // dim screen between these hours (24h); set both to same value to disable
+/* ============================================================ */
+
+document.getElementById("board-name").textContent = BOARD_NAME;
+document.getElementById("w-place").textContent = WEATHER_PLACE;
+document.getElementById("t-sym").textContent = STOCK_SYMBOL;
+const SB = { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY };
+
+let allMessages = [], messages = [], photos = [], allWelcomes = [], welcomes = [], people = [], shoutouts = [];
+let settings = { layout:"messages", show_weather:true, show_ticker:true, show_welcomes:true,
+                 emergency_on:false, emergency_text:"", show_countdown:false, countdown_label:"",
+                 countdown_date:null, show_birthdays:false, show_radar:false,
+                 autorotate_on:false, autorotate_layouts:"messages,photo", autorotate_seconds:30, show_shoutouts:false };
+let msgIdx = 0, photoIdx = 0, msgTimer = null, photoTimer = null, currentLayout = null;
+
+function tickClock() {
+  const now = new Date();
+  document.getElementById("clock").textContent = now.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+  document.getElementById("hdr-date").textContent = now.toLocaleDateString([], { weekday:"short", month:"short", day:"numeric" });
+  const h = now.getHours();
+  const night = NIGHT_DIM_START !== NIGHT_DIM_END && (NIGHT_DIM_START > NIGHT_DIM_END ? (h >= NIGHT_DIM_START || h < NIGHT_DIM_END) : (h >= NIGHT_DIM_START && h < NIGHT_DIM_END));
+  document.getElementById("nightdim").classList.toggle("on", night);
+}
+tickClock(); setInterval(tickClock, 1000);
+
+/* ---- Scheduling filter ---- */
+function hmToMin(hm) { if (!hm) return null; const p = hm.split(":"); return parseInt(p[0],10)*60 + parseInt(p[1]||"0",10); }
+function isLive(row) {
+  const now = new Date(), nowMs = now.getTime();
+  // one-time window
+  if (row.start_at && new Date(row.start_at).getTime() > nowMs) return false;
+  if (row.end_at && new Date(row.end_at).getTime() < nowMs) return false;
+  if (row.expires_at && new Date(row.expires_at).getTime() < nowMs) return false;
+  // recurring day-of-week
+  if (row.days_of_week) {
+    const days = row.days_of_week.split(",").map(function (s){ return parseInt(s.trim(),10); });
+    if (days.indexOf(now.getDay()) === -1) return false;
+    // optional daily time window
+    const tNow = now.getHours()*60 + now.getMinutes();
+    const tS = hmToMin(row.time_start), tE = hmToMin(row.time_end);
+    if (tS !== null && tNow < tS) return false;
+    if (tE !== null && tNow > tE) return false;
+  }
+  return true;
+}
+
+async function refreshData() {
+  await Promise.all([fetchSettings(), fetchMessages(), fetchPhotos(), fetchWelcomes(), fetchPeople(), fetchShoutouts()]);
+  applyEmergency();
+  manageAutoRotate();
+  applyLayout();
+}
+async function fetchSettings() {
+  try { const r = await fetch(SUPABASE_URL + "/rest/v1/board_settings?select=*&limit=1", { headers: SB });
+    if (r.ok) { const rows = await r.json(); if (rows.length) settings = Object.assign({}, settings, rows[0]); } } catch (e) {}
+}
+async function fetchMessages() {
+  try { const r = await fetch(SUPABASE_URL + "/rest/v1/messages?active=eq.true&select=*&order=priority.desc,created_at.desc", { headers: SB });
+    if (r.ok) { allMessages = await r.json(); messages = allMessages.filter(isLive); if (msgIdx >= messages.length) msgIdx = 0; } } catch (e) {}
+}
+async function fetchPhotos() {
+  try { const r = await fetch(SUPABASE_URL + "/rest/v1/photos?active=eq.true&select=*&order=created_at.desc", { headers: SB });
+    if (r.ok) { photos = await r.json(); if (photoIdx >= photos.length) photoIdx = 0; } } catch (e) {}
+}
+async function fetchWelcomes() {
+  try { const r = await fetch(SUPABASE_URL + "/rest/v1/welcomes?active=eq.true&select=*&order=created_at.desc", { headers: SB });
+    if (r.ok) { allWelcomes = await r.json(); welcomes = allWelcomes.filter(isLive); } } catch (e) {}
+}
+async function fetchPeople() {
+  try { const r = await fetch(SUPABASE_URL + "/rest/v1/people?active=eq.true&select=*", { headers: SB });
+    if (r.ok) people = await r.json(); } catch (e) {}
+}
+async function fetchShoutouts() {
+  try { const r = await fetch(SUPABASE_URL + "/rest/v1/shoutouts?active=eq.true&approved=eq.true&select=*&order=created_at.desc", { headers: SB });
+    if (r.ok) shoutouts = await r.json(); } catch (e) {}
+}
+
+/* ---- Emergency banner ---- */
+function applyEmergency() {
+  const el = document.getElementById("emergency");
+  if (settings.emergency_on) {
+    document.getElementById("emergency-text").textContent = settings.emergency_text || "Emergency";
+    el.classList.add("show");
+  } else el.classList.remove("show");
+}
+
+/* ---- Auto-rotate layouts ---- */
+let autoLayouts = [], autoIdx = 0, autoTimer = null, autoActive = false, forcedLayout = null;
+
+function parseAutoLayouts() {
+  const valid = ["messages","photo","split","photobg"];
+  return (settings.autorotate_layouts || "").split(",").map(function (s){ return s.trim(); }).filter(function (s){ return valid.indexOf(s) !== -1; });
+}
+function manageAutoRotate() {
+  const want = !!settings.autorotate_on;
+  autoLayouts = parseAutoLayouts();
+  if (want && autoLayouts.length >= 2) {
+    if (!autoActive) {
+      autoActive = true; autoIdx = 0; forcedLayout = autoLayouts[0];
+      clearTimeout(autoTimer); scheduleAuto();
+    }
+  } else {
+    autoActive = false; forcedLayout = null; clearTimeout(autoTimer); autoTimer = null;
+  }
+}
+function scheduleAuto() {
+  const secs = Math.max(8, settings.autorotate_seconds || 30);
+  autoTimer = setTimeout(function () {
+    autoIdx = (autoIdx + 1) % autoLayouts.length;
+    forcedLayout = autoLayouts[autoIdx];
+    applyLayout();
+    scheduleAuto();
+  }, secs * 1000);
+}
+function effectiveLayout() {
+  return (autoActive && forcedLayout) ? forcedLayout : (settings.layout || "messages");
+}
+
+/* ---- Layout ---- */
+function showView(id) {
+  document.querySelectorAll(".view").forEach(function (v){ v.classList.remove("show"); });
+  const v = document.getElementById(id); v.classList.add("show"); v.classList.remove("fade-in"); void v.offsetWidth; v.classList.add("fade-in");
+}
+function applyLayout() {
+  const layout = effectiveLayout();
+  document.getElementById("strip").classList.toggle("hidden", layout !== "messages");
+  document.getElementById("hdr").classList.toggle("hidden", layout === "photo");
+  if (layout !== currentLayout) { currentLayout = layout; clearTimeout(msgTimer); clearTimeout(photoTimer); msgTimer = photoTimer = null; }
+  if (layout === "messages") { showView("view-messages"); if (!msgTimer) rotateMessage(); buildStrip(); }
+  else if (layout === "photo") { showView("view-photo"); if (!photoTimer) rotatePhoto(); }
+  else if (layout === "split") { showView("view-split"); if (!photoTimer) rotatePhoto(); }
+  else if (layout === "photobg") { showView("view-photobg"); if (!photoTimer) rotatePhoto(); }
+}
+function topMessage() { return messages.length ? messages[0] : null; }
+function pinHtml(m) { return m.label ? '<span class="pin ' + (m.type||'info') + '">' + esc(m.label) + '</span>' : ""; }
+
+function renderQR(container, url) {
+  if (!url) return;
+  const box = document.createElement("div"); box.className = "qr"; container.appendChild(box);
+  try { new QRCode(box, { text: url, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M }); } catch (e) {}
+}
+
+function renderDots() {
+  const dots = document.getElementById("msg-dots");
+  if (messages.length < 2) { dots.innerHTML = ""; return; }
+  let html = "";
+  for (let i = 0; i < messages.length; i++) html += '<div class="dot' + (i === msgIdx ? ' on' : '') + '"></div>';
+  dots.innerHTML = html;
+}
+function rotateMessage() {
+  clearTimeout(msgTimer);
+  const host = document.getElementById("msg-host");
+  if (!messages.length) { host.innerHTML = '<div id="empty">No messages right now.</div>'; renderDots(); msgTimer = setTimeout(rotateMessage, MSG_ROTATE_SEC*1000); return; }
+  if (msgIdx >= messages.length) msgIdx = 0;
+  const m = messages[msgIdx];
+  const created = m.created_at ? new Date(m.created_at).toLocaleDateString([], {month:"short", day:"numeric"}) : "";
+  host.innerHTML = '<div class="msg fade-in">' + pinHtml(m) + '<div class="text">' + esc(m.text) + '</div>' + (created ? '<div class="meta">' + created + '</div>' : "") + '</div>';
+  if (m.qr_url) renderQR(host.querySelector(".msg"), m.qr_url);
+  renderDots();
+  msgTimer = setTimeout(function (){ msgIdx = (msgIdx+1) % messages.length; rotateMessage(); }, MSG_ROTATE_SEC*1000);
+}
+
+function rotatePhoto() {
+  clearTimeout(photoTimer);
+  const layout = settings.layout;
+  if (!photos.length) {
+    if (layout === "photo") { document.getElementById("photo-img").removeAttribute("src"); document.getElementById("photo-cap").style.display = "none"; }
+    if (layout === "split") { document.getElementById("split-ph").style.backgroundImage = ""; renderSplitText(); }
+    if (layout === "photobg") { document.getElementById("view-photobg").style.backgroundImage = ""; renderPhotobgText(); }
+    photoTimer = setTimeout(rotatePhoto, PHOTO_ROTATE_SEC*1000); return;
+  }
+  if (photoIdx >= photos.length) photoIdx = 0;
+  const p = photos[photoIdx];
+  if (layout === "photo") {
+    const img = document.getElementById("photo-img"); img.src = p.url; img.classList.remove("fade-in"); void img.offsetWidth; img.classList.add("fade-in");
+    const cap = document.getElementById("photo-cap"); if (p.caption) { cap.textContent = p.caption; cap.style.display = "block"; } else cap.style.display = "none";
+  } else if (layout === "split") { document.getElementById("split-ph").style.backgroundImage = 'url("' + p.url + '")'; renderSplitText(); }
+  else if (layout === "photobg") { document.getElementById("view-photobg").style.backgroundImage = 'url("' + p.url + '")'; renderPhotobgText(); }
+  if (photos.length > 1) { try { new Image().src = photos[(photoIdx+1) % photos.length].url; } catch (e) {} }
+  photoTimer = setTimeout(function (){ photoIdx = (photoIdx+1) % photos.length; rotatePhoto(); }, PHOTO_ROTATE_SEC*1000);
+}
+function renderSplitText() {
+  const tx = document.getElementById("split-tx"); const m = topMessage();
+  if (!m) { tx.innerHTML = '<div class="text" style="color:#44607a;">No message</div>'; return; }
+  const created = m.created_at ? new Date(m.created_at).toLocaleDateString([], {month:"short", day:"numeric"}) : "";
+  tx.innerHTML = pinHtml(m) + '<div class="text">' + esc(m.text) + '</div>' + (created ? '<div class="meta">' + created + '</div>' : "");
+  if (m.qr_url) renderQR(tx, m.qr_url);
+}
+function renderPhotobgText() {
+  const ov = document.getElementById("photobg-overlay"); const m = topMessage();
+  if (!m) { ov.innerHTML = ""; return; }
+  ov.innerHTML = pinHtml(m) + '<div class="text">' + esc(m.text) + '</div>';
+}
+
+/* ---- Strip ---- */
+let stripOrder = [], stripIdx = 0, welIdx = 0, soIdx = 0;
+function todaysBirthdays() {
+  const now = new Date(), mo = now.getMonth()+1, da = now.getDate();
+  return people.filter(function (p){ return p.month === mo && p.day === da; });
+}
+function buildStrip() {
+  stripOrder = [];
+  if (settings.show_weather) stripOrder.push("weather");
+  if (settings.show_ticker) stripOrder.push("ticker");
+  if (settings.show_radar) stripOrder.push("radar");
+  if (settings.show_shoutouts && shoutouts.length) stripOrder.push("shoutout");
+  if (settings.show_welcomes && welcomes.length) stripOrder.push("welcome");
+  if (settings.show_countdown && settings.countdown_date) stripOrder.push("countdown");
+  if (settings.show_birthdays && todaysBirthdays().length) stripOrder.push("birthday");
+  const strip = document.getElementById("strip");
+  if (!stripOrder.length || effectiveLayout() !== "messages") {
+    strip.classList.add("hidden"); document.querySelectorAll(".panel").forEach(function (p){ p.classList.remove("show"); });
+  } else strip.classList.remove("hidden");
+}
+let bdIdx = 0;
+function rotateStrip() {
+  if (effectiveLayout() !== "messages" || !stripOrder.length) return;
+  document.querySelectorAll(".panel").forEach(function (p){ p.classList.remove("show"); });
+  const panel = stripOrder[stripIdx % stripOrder.length];
+  if (panel === "welcome") {
+    if (welcomes.length) { const w = welcomes[welIdx % welcomes.length];
+      document.getElementById("wel-name").textContent = w.name; document.getElementById("wel-sub").textContent = w.subtitle || "";
+      welIdx++; document.getElementById("welcome").classList.add("show"); } else { stripIdx++; rotateStrip(); return; }
+  } else if (panel === "countdown") {
+    const days = Math.ceil((new Date(settings.countdown_date).getTime() - Date.now()) / 86400000);
+    document.getElementById("cd-num").textContent = days >= 0 ? days : 0;
+    document.getElementById("cd-unit").textContent = (Math.abs(days) === 1 ? "day" : "days") + (days < 0 ? " ago" : "");
+    document.getElementById("cd-label").textContent = settings.countdown_label || "";
+    document.getElementById("countdown").classList.add("show");
+  } else if (panel === "radar") {
+    document.getElementById("radar").classList.add("show");
+    ensureRadar();
+    if (radarMap) setTimeout(function(){ radarMap.invalidateSize(); }, 100);
+  } else if (panel === "shoutout") {
+    if (shoutouts.length) { const s = shoutouts[soIdx % shoutouts.length];
+      document.getElementById("so-recipient").textContent = s.recipient;
+      document.getElementById("so-msg").textContent = s.message || "";
+      document.getElementById("so-from").textContent = s.from_name ? "\u2014 " + s.from_name : "";
+      soIdx++; document.getElementById("shoutout").classList.add("show"); } else { stripIdx++; rotateStrip(); return; }
+  } else if (panel === "birthday") {
+    const bdays = todaysBirthdays();
+    if (bdays.length) { const b = bdays[bdIdx % bdays.length];
+      const isAnniv = b.kind === "anniversary";
+      document.getElementById("bd-text").innerHTML = (isAnniv ? "Happy Anniversary, " : "Happy Birthday, ") + '<span class="bname">' + esc(b.name) + '</span>';
+      let sub = ""; if (isAnniv && b.year) { const yrs = new Date().getFullYear() - b.year; if (yrs > 0) sub = yrs + (yrs === 1 ? " year" : " years"); }
+      document.getElementById("bd-sub").textContent = sub;
+      document.querySelector("#birthday .cake").innerHTML = isAnniv ? "&#127881;" : "&#127874;";
+      bdIdx++; document.getElementById("birthday").classList.add("show"); } else { stripIdx++; rotateStrip(); return; }
+  } else document.getElementById(panel).classList.add("show");
+  stripIdx++;
+}
+
+/* ---- Radar (OpenWeather precipitation tiles on Leaflet) ---- */
+let radarMap = null, radarLayer = null;
+function ensureRadar() {
+  if (radarMap || OPENWEATHER_KEY.indexOf("YOUR-") === 0 || typeof L === "undefined") return;
+  try {
+    radarMap = L.map("radar-map", { zoomControl:false, attributionControl:false, dragging:false, scrollWheelZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, touchZoom:false }).setView([WEATHER_LAT, WEATHER_LON], 7);
+    L.tileLayer("https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=" + OPENWEATHER_KEY, { opacity: 0.85 }).addTo(radarMap);
+    // dark base map so precipitation reads well
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png", { opacity: 0.7 }).addTo(radarMap);
+    radarLayer = L.tileLayer("https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=" + OPENWEATHER_KEY, { opacity: 0.9 }).addTo(radarMap);
+  } catch (e) {}
+}
+function refreshRadar() {
+  if (radarLayer) { try { radarLayer.redraw(); } catch (e) {} }
+}
+
+/* ---- Weather ---- */
+async function fetchWeather() {
+  if (OPENWEATHER_KEY.indexOf("YOUR-") === 0) return;
+  try {
+    const url = "https://api.openweathermap.org/data/2.5/weather?lat=" + WEATHER_LAT + "&lon=" + WEATHER_LON + "&units=imperial&appid=" + OPENWEATHER_KEY;
+    const r = await fetch(url); if (!r.ok) throw new Error(); const d = await r.json();
+    document.getElementById("w-temp").textContent = Math.round(d.main.temp) + "\u00B0";
+    document.getElementById("w-cond").textContent = (d.weather && d.weather[0] && d.weather[0].description) || "";
+    document.querySelector("#weather .icon").textContent = weatherEmoji(d.weather && d.weather[0] && d.weather[0].id, d.weather && d.weather[0] && d.weather[0].icon);
+    document.getElementById("w-extra").textContent = "Feels " + Math.round(d.main.feels_like) + "\u00B0 \u00B7 H " + Math.round(d.main.temp_max) + "\u00B0 / L " + Math.round(d.main.temp_min) + "\u00B0 \u00B7 Wind " + Math.round(d.wind.speed) + " mph";
+  } catch (e) {}
+}
+function weatherEmoji(id, icon) {
+  if (icon && icon.indexOf("01") === 0) return "\u2600\uFE0F";
+  if (icon && icon.indexOf("02") === 0) return "\uD83C\uDF24\uFE0F";
+  if (icon && (icon.indexOf("03") === 0 || icon.indexOf("04") === 0)) return "\u2601\uFE0F";
+  if (id >= 200 && id < 300) return "\u26C8\uFE0F";
+  if (id >= 300 && id < 600) return "\uD83C\uDF27\uFE0F";
+  if (id >= 600 && id < 700) return "\u2744\uFE0F";
+  if (id >= 700 && id < 800) return "\uD83C\uDF2B\uFE0F";
+  return "\u26C5";
+}
+async function fetchStock() {
+  if (FINNHUB_KEY.indexOf("YOUR-") === 0) return;
+  try {
+    const r = await fetch("https://finnhub.io/api/v1/quote?symbol=" + STOCK_SYMBOL + "&token=" + FINNHUB_KEY);
+    if (!r.ok) throw new Error(); const d = await r.json(); if (!d.c) return;
+    document.getElementById("t-price").textContent = "$" + d.c.toFixed(2);
+    document.getElementById("t-prev").textContent = "$" + d.pc.toFixed(2);
+    const chg = document.getElementById("t-chg"); const up = d.d >= 0;
+    chg.className = "chg " + (up ? "up" : "down");
+    chg.textContent = (up ? "\u25B2" : "\u25BC") + " " + Math.abs(d.d).toFixed(2) + " (" + Math.abs(d.dp).toFixed(2) + "%)";
+  } catch (e) {}
+}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+refreshData(); fetchWeather(); fetchStock();
+setInterval(refreshData, MSG_REFRESH_SEC*1000);
+setInterval(rotateStrip, STRIP_ROTATE_SEC*1000);
+setInterval(fetchWeather, WEATHER_REFRESH_M*60*1000);
+setInterval(fetchStock, STOCK_REFRESH_M*60*1000);
+setInterval(refreshRadar, 10*60*1000);
+setTimeout(rotateStrip, 1500);
+
+if ("wakeLock" in navigator) {
+  const keep = async function (){ try { await navigator.wakeLock.request("screen"); } catch (e) {} };
+  keep(); document.addEventListener("visibilitychange", function (){ if (document.visibilityState === "visible") keep(); });
+}
+</script>
+</body>
+</html>
