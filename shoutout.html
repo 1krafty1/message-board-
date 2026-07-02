@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Send a Shoutout</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Inter","Segoe UI",system-ui,sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+    background: linear-gradient(180deg, #0e1d2e 0%, #0a1522 100%); color: #e8eef5; }
+  .card { width: 100%; max-width: 420px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); border-radius: 18px; padding: 28px; }
+  h1 { font-size: 24px; margin-bottom: 6px; }
+  .sub { color: #9fb3c8; font-size: 14px; margin-bottom: 22px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #9fb3c8; }
+  input, textarea { width: 100%; font: inherit; padding: 12px 14px; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; margin-bottom: 16px; background: rgba(0,0,0,0.25); color: #e8eef5; }
+  input:focus, textarea:focus { outline: none; border-color: #5fd0df; }
+  textarea { resize: vertical; min-height: 90px; }
+  button { width: 100%; font: inherit; font-weight: 700; border: none; border-radius: 10px; padding: 14px; cursor: pointer; background: #1b9aaa; color: #fff; font-size: 16px; }
+  button:hover { background: #23b3c4; }
+  button:disabled { opacity: 0.6; cursor: default; }
+  .status { font-size: 14px; margin-top: 12px; min-height: 20px; color: #9fb3c8; text-align: center; }
+  .status.err { color: #ff8a8a; }
+  #done { display: none; text-align: center; padding: 30px 0; }
+  #done .big { font-size: 60px; margin-bottom: 14px; }
+  #done .t { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  #done .d { color: #9fb3c8; font-size: 14px; margin-bottom: 24px; }
+  #done button { background: rgba(255,255,255,0.1); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div id="form">
+    <h1>⭐ Send a Shoutout</h1>
+    <div class="sub">Recognize a coworker or crew — it shows on the board once approved.</div>
+    <label>Who are you recognizing?</label>
+    <input id="recipient" placeholder="e.g. Jenna R. / the night crew" maxlength="80">
+    <label>What did they do?</label>
+    <textarea id="message" placeholder="e.g. Stayed late to finish the Anderson install — huge help!" maxlength="300"></textarea>
+    <label>Your name (optional)</label>
+    <input id="from" placeholder="e.g. Randy" maxlength="60">
+    <button id="sendBtn" onclick="send()">Send it 🎉</button>
+    <div class="status" id="status"></div>
+  </div>
+  <div id="done">
+    <div class="big">🙌</div>
+    <div class="t">Shoutout sent!</div>
+    <div class="d">It's in the queue and will appear on the board once it's approved.</div>
+    <button onclick="reset()">Send another</button>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://rhtycmrkpjxlfxgyfete.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJodHljbXJrcGp4bGZ4Z3lmZXRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MzcyNTcsImV4cCI6MjA5ODUxMzI1N30.OUOQy6ZBaiXK1rooQre-SLqQxOyqSc9qbU3RWIaQIwM";
+
+async function send() {
+  const recipient = document.getElementById("recipient").value.trim();
+  const message = document.getElementById("message").value.trim();
+  const from = document.getElementById("from").value.trim();
+  const st = document.getElementById("status");
+  if (!recipient || !message) { st.textContent = "Please fill in who and what."; st.className = "status err"; return; }
+  const btn = document.getElementById("sendBtn"); btn.disabled = true;
+  st.textContent = "Sending..."; st.className = "status";
+  try {
+    const r = await fetch(SUPABASE_URL + "/rest/v1/shoutouts", {
+      method: "POST",
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ recipient: recipient, message: message, from_name: from || null, approved: false, active: true })
+    });
+    if (!r.ok) throw new Error();
+    document.getElementById("form").style.display = "none";
+    document.getElementById("done").style.display = "block";
+  } catch (e) { st.textContent = "Couldn't send — try again."; st.className = "status err"; btn.disabled = false; }
+}
+function reset() {
+  ["recipient","message","from"].forEach(function (id) { document.getElementById(id).value = ""; });
+  document.getElementById("status").textContent = "";
+  document.getElementById("sendBtn").disabled = false;
+  document.getElementById("done").style.display = "none";
+  document.getElementById("form").style.display = "block";
+}
+</script>
+</body>
+</html>

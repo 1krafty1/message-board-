@@ -70,8 +70,11 @@
   .msg .qr img, .msg .qr canvas { display: block; width: 16vh; height: 16vh; }
   #empty { font-size: 4vh; color: #44607a; }
 
-  #view-photo { justify-content: center; align-items: center; background: #000; }
+  #view-photo { justify-content: center; align-items: center; background: #000; overflow: hidden; }
   #view-photo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  #view-photo img.kb { animation: kenburns 14s ease-in-out forwards; }
+  @keyframes kenburns { from { transform: scale(1) translate(0,0); } to { transform: scale(1.10) translate(1.2%, -1%); } }
+  #view-photo video { max-width: 100%; max-height: 100%; }
   #view-photo .cap { position: absolute; bottom: 0; left: 0; right: 0; padding: 4vh 5vw 3vh; font-size: 3.2vh; font-weight: 600; background: linear-gradient(transparent, rgba(0,0,0,0.75)); text-align: center; }
 
   #view-split { flex-direction: row; }
@@ -81,7 +84,9 @@
   #view-split .tx .text { font-size: 5.5vh; line-height: 1.15; font-weight: 700; }
   #view-split .tx .meta { font-size: 2.4vh; color: #6b8299; }
 
-  #view-photobg { justify-content: center; align-items: center; background: #000 center/cover no-repeat; }
+  #view-photobg { justify-content: center; align-items: center; background: #000; overflow: hidden; }
+  #view-photobg .bgimg { position: absolute; inset: 0; background: center/cover no-repeat; }
+  #view-photobg .bgimg.kb { animation: kenburns 14s ease-in-out forwards; }
   #view-photobg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(10,18,30,0.25), rgba(10,18,30,0.85)); }
   #view-photobg .overlay { position: relative; z-index: 2; text-align: center; padding: 0 6vw; max-width: 92vw; }
   #view-photobg .overlay .pin { display: inline-block; font-size: 2.2vh; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.6vh 1.6vh; border-radius: 999px; margin-bottom: 2.5vh; }
@@ -123,6 +128,28 @@
   #radar .rlabel { font-size: 2.6vh; font-weight: 600; color: #5fd0df; text-transform: uppercase; letter-spacing: 0.06em; }
   #radar .rsub { font-size: 2.2vh; color: #6b8299; margin-top: 0.5vh; }
   .leaflet-control-attribution, .leaflet-control-zoom { display: none !important; }
+  #forecast { justify-content: space-around; gap: 1vw; }
+  #forecast .day { display: flex; flex-direction: column; align-items: center; gap: 0.4vh; }
+  #forecast .day .dname { font-size: 1.9vh; color: #5fd0df; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  #forecast .day .dicon { font-size: 4.5vh; line-height: 1.2; }
+  #forecast .day .dtemps { font-size: 2.1vh; font-variant-numeric: tabular-nums; }
+  #forecast .day .dtemps .lo { color: #6b8299; }
+  #news { justify-content: flex-start; gap: 2vw; }
+  #news .nicon { font-size: 5.5vh; line-height: 1; }
+  #news .nlabel { font-size: 1.9vh; font-weight: 700; color: #5fd0df; text-transform: uppercase; letter-spacing: 0.08em; }
+  #news .ntitle { font-size: 2.9vh; font-weight: 700; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  #news .nsrc { font-size: 1.9vh; color: #6b8299; margin-top: 0.4vh; }
+  #quote { justify-content: flex-start; gap: 2vw; }
+  #quote .qicon { font-size: 5.5vh; line-height: 1; }
+  #quote .qtext { font-size: 2.8vh; font-weight: 600; line-height: 1.25; font-style: italic; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+  #quote .qwho { font-size: 2vh; color: #6b8299; margin-top: 0.4vh; }
+  #scores { justify-content: flex-start; gap: 2vw; }
+  #scores .sicon { font-size: 5.5vh; line-height: 1; }
+  #scores .steam { font-size: 2vh; font-weight: 700; color: #5fd0df; text-transform: uppercase; letter-spacing: 0.06em; }
+  #scores .sgame { font-size: 3.2vh; font-weight: 700; }
+  #scores .swhen { font-size: 2vh; color: #6b8299; margin-top: 0.4vh; }
+  #shoutout .soqr { background: #fff; padding: 0.8vh; border-radius: 6px; flex: 0 0 auto; }
+  #shoutout .soqr img, #shoutout .soqr canvas { display: block; width: 10vh; height: 10vh; }
   #shoutout { justify-content: flex-start; gap: 2vw; }
   #shoutout .star { font-size: 6vh; line-height: 1; }
   #shoutout .slabel { font-size: 1.9vh; font-weight: 700; color: #ffe07a; text-transform: uppercase; letter-spacing: 0.08em; }
@@ -130,6 +157,31 @@
   #shoutout .smsg { font-size: 2.3vh; color: #cfe0ee; margin-top: 0.5vh; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   #shoutout .sfrom { font-size: 1.9vh; color: #6b8299; margin-top: 0.5vh; font-style: italic; }
 
+  /* Light theme */
+  body.light { background: linear-gradient(180deg, #eef3f8 0%, #dfe8f0 100%); color: #1a2b3d; }
+  body.light #ambient { background:
+      radial-gradient(120vh 90vh at 20% 10%, rgba(27,154,170,0.10), transparent 60%),
+      radial-gradient(100vh 80vh at 85% 90%, rgba(31,74,140,0.08), transparent 55%); }
+  body.light header { border-bottom-color: #1b9aaa; }
+  body.light header .title { color: #157d8b; text-shadow: none; }
+  body.light header .clock { color: #44607a; }
+  body.light header .date { color: #6b8299; }
+  body.light .msg { background: rgba(255,255,255,0.75); border-color: rgba(20,50,70,0.08); box-shadow: 0 20px 50px rgba(30,60,90,0.15); }
+  body.light .msg .meta, body.light #empty { color: #8aa0b5; }
+  body.light #strip { background: rgba(255,255,255,0.6); border-top-color: rgba(27,154,170,0.4); }
+  body.light .zone { border-right-color: rgba(20,50,70,0.08); }
+  body.light #weather .cond, body.light #welcome .wsub, body.light #birthday .bsub,
+  body.light #countdown .unit, body.light #shoutout .smsg { color: #44607a; }
+  body.light #weather .extra, body.light #news .nsrc, body.light #quote .qwho,
+  body.light #scores .swhen, body.light #ticker .label, body.light #shoutout .sfrom,
+  body.light #radar .rsub, body.light .msg .meta { color: #6b8299; }
+  body.light #msg-dots .dot { background: #b8c9d8; }
+  body.light #msg-dots .dot.on { background: #1b9aaa; }
+  /* Holiday accents (auto by date) */
+  body.hol-xmas header .title { color: #ff8a8a; text-shadow: 0 0 30px rgba(255,120,120,0.4); }
+  body.hol-xmas #strip { border-top-color: rgba(122,255,160,0.4); }
+  body.hol-july4 header .title { color: #ff9a9a; text-shadow: 0 0 30px rgba(140,170,255,0.5); }
+  body.hol-halloween header .title { color: #ffb057; text-shadow: 0 0 30px rgba(255,150,50,0.4); }
   .fade-in { animation: fadeIn 0.5s forwards; }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   .msg.fade-in { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) forwards; }
@@ -154,9 +206,9 @@
 
   <div id="main">
     <div class="view" id="view-messages"><div id="msg-host"><div id="empty">No messages right now.</div></div><div id="msg-dots"></div></div>
-    <div class="view" id="view-photo"><img id="photo-img" alt=""><div class="cap" id="photo-cap" style="display:none;"></div></div>
+    <div class="view" id="view-photo"><img id="photo-img" alt=""><video id="photo-video" muted playsinline style="display:none;"></video><div class="cap" id="photo-cap" style="display:none;"></div></div>
     <div class="view" id="view-split"><div class="ph" id="split-ph"></div><div class="tx" id="split-tx"></div></div>
-    <div class="view" id="view-photobg"><div class="overlay" id="photobg-overlay"></div></div>
+    <div class="view" id="view-photobg"><div class="bgimg" id="photobg-img"></div><div class="overlay" id="photobg-overlay"></div></div>
   </div>
 
   <div id="strip" class="hidden">
@@ -193,10 +245,28 @@
     </div>
     <div class="panel" id="shoutout">
       <div class="star">&#11088;</div>
-      <div><div class="slabel">Shoutout</div>
+      <div style="flex:1;min-width:0;"><div class="slabel">Shoutout</div>
         <div class="srecipient" id="so-recipient">&mdash;</div>
         <div class="smsg" id="so-msg"></div>
         <div class="sfrom" id="so-from"></div></div>
+      <div class="soqr" id="so-qr" style="display:none;"></div>
+    </div>
+    <div class="panel" id="forecast"></div>
+    <div class="panel" id="news">
+      <div class="nicon">&#128240;</div>
+      <div style="min-width:0;"><div class="nlabel">News</div>
+        <div class="ntitle" id="news-title">&mdash;</div>
+        <div class="nsrc" id="news-src"></div></div>
+    </div>
+    <div class="panel" id="quote">
+      <div class="qicon">&#128161;</div>
+      <div style="min-width:0;"><div class="qtext" id="q-text">&mdash;</div><div class="qwho" id="q-who"></div></div>
+    </div>
+    <div class="panel" id="scores">
+      <div class="sicon" id="sc-icon">&#127952;</div>
+      <div><div class="steam" id="sc-team">&mdash;</div>
+        <div class="sgame" id="sc-game">&mdash;</div>
+        <div class="swhen" id="sc-when"></div></div>
     </div>
     </div>
   </div>
@@ -216,6 +286,30 @@ const STOCK_SYMBOL = "APG";
 const MSG_REFRESH_SEC = 30, MSG_ROTATE_SEC = 12, PHOTO_ROTATE_SEC = 10;
 const STRIP_ROTATE_SEC = 10, WEATHER_REFRESH_M = 10, STOCK_REFRESH_M = 5;
 const NIGHT_DIM_START = 21, NIGHT_DIM_END = 6;   // dim screen between these hours (24h); set both to same value to disable
+const NEWS_FEED = "https://news.google.com/rss/search?q=Grand+Forks+ND&hl=en-US&gl=US&ceid=US:en";
+const RSS_TO_JSON = "https://api.rss2json.com/v1/api.json?rss_url=";
+const SPORTS_TEAMS = [
+  { label: "UND Hockey", icon: "🏒", path: "hockey/mens-college-hockey", id: "155" },
+  { label: "Vikings",    icon: "🏈", path: "football/nfl",              id: "min" },
+  { label: "Twins",      icon: "⚾",       path: "baseball/mlb",              id: "min" }
+];
+const QUOTES = [
+  ["The best way to predict the future is to create it.", "Peter Drucker"],
+  ["Quality means doing it right when no one is looking.", "Henry Ford"],
+  ["Alone we can do so little; together we can do so much.", "Helen Keller"],
+  ["It always seems impossible until it's done.", "Nelson Mandela"],
+  ["Well done is better than well said.", "Benjamin Franklin"],
+  ["The secret of getting ahead is getting started.", "Mark Twain"],
+  ["Teamwork makes the dream work.", "John C. Maxwell"],
+  ["Whether you think you can or you can't, you're right.", "Henry Ford"],
+  ["Success is the sum of small efforts, repeated day in and day out.", "Robert Collier"],
+  ["Do the right thing. It will gratify some people and astonish the rest.", "Mark Twain"],
+  ["Excellence is not an act, but a habit.", "Aristotle"],
+  ["The harder the conflict, the greater the triumph.", "George Washington"],
+  ["A goal without a plan is just a wish.", "Antoine de Saint-Exupéry"],
+  ["Take care of your people and they will take care of your customers.", "Richard Branson"],
+  ["Safety doesn't happen by accident.", "Unknown"]
+];
 /* ============================================================ */
 
 document.getElementById("board-name").textContent = BOARD_NAME;
@@ -227,7 +321,8 @@ let allMessages = [], messages = [], photos = [], allWelcomes = [], welcomes = [
 let settings = { layout:"messages", show_weather:true, show_ticker:true, show_welcomes:true,
                  emergency_on:false, emergency_text:"", show_countdown:false, countdown_label:"",
                  countdown_date:null, show_birthdays:false, show_radar:false,
-                 autorotate_on:false, autorotate_layouts:"messages,photo", autorotate_seconds:30, show_shoutouts:false };
+                 autorotate_on:false, autorotate_layouts:"messages,photo", autorotate_seconds:30, show_shoutouts:false,
+                 show_forecast:false, show_news:false, show_quotes:false, show_scores:false, theme:"dark" };
 let msgIdx = 0, photoIdx = 0, msgTimer = null, photoTimer = null, currentLayout = null;
 
 function tickClock() {
@@ -237,6 +332,12 @@ function tickClock() {
   const h = now.getHours();
   const night = NIGHT_DIM_START !== NIGHT_DIM_END && (NIGHT_DIM_START > NIGHT_DIM_END ? (h >= NIGHT_DIM_START || h < NIGHT_DIM_END) : (h >= NIGHT_DIM_START && h < NIGHT_DIM_END));
   document.getElementById("nightdim").classList.toggle("on", night);
+  // theme + holiday accents
+  document.body.classList.toggle("light", settings.theme === "light");
+  const mo = now.getMonth()+1, da = now.getDate();
+  document.body.classList.toggle("hol-xmas", mo === 12);
+  document.body.classList.toggle("hol-july4", mo === 7 && da <= 7);
+  document.body.classList.toggle("hol-halloween", mo === 10 && da >= 24);
 }
 tickClock(); setInterval(tickClock, 1000);
 
@@ -377,24 +478,48 @@ function rotateMessage() {
   msgTimer = setTimeout(function (){ msgIdx = (msgIdx+1) % messages.length; rotateMessage(); }, MSG_ROTATE_SEC*1000);
 }
 
+function isVideo(url) { return /\.(mp4|webm|mov|m4v)(\?|$)/i.test(url || ""); }
+function advancePhoto() { photoIdx = (photoIdx+1) % photos.length; rotatePhoto(); }
 function rotatePhoto() {
   clearTimeout(photoTimer);
-  const layout = settings.layout;
+  const layout = effectiveLayout();
+  const img = document.getElementById("photo-img"), vid = document.getElementById("photo-video");
+  const stills = photos.filter(function (p){ return !isVideo(p.url); });
   if (!photos.length) {
-    if (layout === "photo") { document.getElementById("photo-img").removeAttribute("src"); document.getElementById("photo-cap").style.display = "none"; }
+    if (layout === "photo") { img.removeAttribute("src"); vid.style.display = "none"; document.getElementById("photo-cap").style.display = "none"; }
     if (layout === "split") { document.getElementById("split-ph").style.backgroundImage = ""; renderSplitText(); }
-    if (layout === "photobg") { document.getElementById("view-photobg").style.backgroundImage = ""; renderPhotobgText(); }
+    if (layout === "photobg") { document.getElementById("photobg-img").style.backgroundImage = ""; renderPhotobgText(); }
     photoTimer = setTimeout(rotatePhoto, PHOTO_ROTATE_SEC*1000); return;
   }
   if (photoIdx >= photos.length) photoIdx = 0;
-  const p = photos[photoIdx];
+  let p = photos[photoIdx];
   if (layout === "photo") {
-    const img = document.getElementById("photo-img"); img.src = p.url; img.classList.remove("fade-in"); void img.offsetWidth; img.classList.add("fade-in");
-    const cap = document.getElementById("photo-cap"); if (p.caption) { cap.textContent = p.caption; cap.style.display = "block"; } else cap.style.display = "none";
-  } else if (layout === "split") { document.getElementById("split-ph").style.backgroundImage = 'url("' + p.url + '")'; renderSplitText(); }
-  else if (layout === "photobg") { document.getElementById("view-photobg").style.backgroundImage = 'url("' + p.url + '")'; renderPhotobgText(); }
-  if (photos.length > 1) { try { new Image().src = photos[(photoIdx+1) % photos.length].url; } catch (e) {} }
-  photoTimer = setTimeout(function (){ photoIdx = (photoIdx+1) % photos.length; rotatePhoto(); }, PHOTO_ROTATE_SEC*1000);
+    const cap = document.getElementById("photo-cap");
+    if (p.caption) { cap.textContent = p.caption; cap.style.display = "block"; } else cap.style.display = "none";
+    if (isVideo(p.url)) {
+      img.style.display = "none"; img.removeAttribute("src");
+      vid.style.display = "block"; vid.src = p.url; vid.currentTime = 0;
+      vid.onended = advancePhoto;
+      vid.play().catch(function (){});
+      photoTimer = setTimeout(advancePhoto, 60*1000);   // safety cap: never stick on one video
+      return;
+    }
+    vid.pause(); vid.style.display = "none"; vid.removeAttribute("src");
+    img.style.display = "block"; img.src = p.url;
+    img.classList.remove("fade-in","kb"); void img.offsetWidth; img.classList.add("fade-in","kb");
+  } else if (layout === "split") {
+    if (isVideo(p.url) && stills.length) p = stills[photoIdx % stills.length];
+    if (!isVideo(p.url)) document.getElementById("split-ph").style.backgroundImage = 'url("' + p.url + '")';
+    renderSplitText();
+  } else if (layout === "photobg") {
+    if (isVideo(p.url) && stills.length) p = stills[photoIdx % stills.length];
+    const bg = document.getElementById("photobg-img");
+    if (!isVideo(p.url)) { bg.style.backgroundImage = 'url("' + p.url + '")'; bg.classList.remove("kb"); void bg.offsetWidth; bg.classList.add("kb"); }
+    renderPhotobgText();
+  }
+  const next = photos[(photoIdx+1) % photos.length];
+  if (photos.length > 1 && next && !isVideo(next.url)) { try { new Image().src = next.url; } catch (e) {} }
+  photoTimer = setTimeout(advancePhoto, PHOTO_ROTATE_SEC*1000);
 }
 function renderSplitText() {
   const tx = document.getElementById("split-tx"); const m = topMessage();
@@ -422,6 +547,10 @@ function buildStrip() {
   if (settings.show_welcomes && welcomes.length) stripOrder.push("welcome");
   if (settings.show_countdown && settings.countdown_date) stripOrder.push("countdown");
   if (settings.show_birthdays && todaysBirthdays().length) stripOrder.push("birthday");
+  if (settings.show_forecast && forecastDays.length) stripOrder.push("forecast");
+  if (settings.show_news && newsItems.length) stripOrder.push("news");
+  if (settings.show_quotes) stripOrder.push("quote");
+  if (settings.show_scores && scoreItems.length) stripOrder.push("scores");
   document.getElementById("zone-weather").classList.toggle("hidden", !settings.show_weather);
   document.getElementById("zone-ticker").classList.toggle("hidden", !settings.show_ticker);
   document.getElementById("zone-rotate").classList.toggle("hidden", !stripOrder.length);
@@ -453,7 +582,26 @@ function rotateStrip() {
       document.getElementById("so-recipient").textContent = s.recipient;
       document.getElementById("so-msg").textContent = s.message || "";
       document.getElementById("so-from").textContent = s.from_name ? "\u2014 " + s.from_name : "";
-      soIdx++; document.getElementById("shoutout").classList.add("show"); } else { stripIdx++; rotateStrip(); return; }
+      soIdx++; ensureShoutoutQR(); document.getElementById("shoutout").classList.add("show"); } else { stripIdx++; rotateStrip(); return; }
+  } else if (panel === "forecast") {
+    renderForecast(); document.getElementById("forecast").classList.add("show");
+  } else if (panel === "news") {
+    if (newsItems.length) { const n = newsItems[newsIdx % newsItems.length];
+      document.getElementById("news-title").textContent = n.title;
+      document.getElementById("news-src").textContent = n.source || "";
+      newsIdx++; document.getElementById("news").classList.add("show"); } else { stripIdx++; rotateStrip(); return; }
+  } else if (panel === "quote") {
+    const q = QUOTES[(dayOfYear() + qIdx) % QUOTES.length]; qIdx++;
+    document.getElementById("q-text").textContent = "“" + q[0] + "”";
+    document.getElementById("q-who").textContent = "— " + q[1];
+    document.getElementById("quote").classList.add("show");
+  } else if (panel === "scores") {
+    if (scoreItems.length) { const s = scoreItems[scIdx % scoreItems.length];
+      document.getElementById("sc-icon").textContent = s.icon;
+      document.getElementById("sc-team").textContent = s.label;
+      document.getElementById("sc-game").textContent = s.game;
+      document.getElementById("sc-when").textContent = s.when;
+      scIdx++; document.getElementById("scores").classList.add("show"); } else { stripIdx++; rotateStrip(); return; }
   } else if (panel === "birthday") {
     const bdays = todaysBirthdays();
     if (bdays.length) { const b = bdays[bdIdx % bdays.length];
@@ -481,6 +629,100 @@ function ensureRadar() {
 }
 function refreshRadar() {
   if (radarLayer) { try { radarLayer.redraw(); } catch (e) {} }
+}
+
+/* ---- Forecast / News / Quotes / Scores ---- */
+let forecastDays = [], newsItems = [], newsIdx = 0, qIdx = 0, scoreItems = [], scIdx = 0, soQrDone = false;
+function dayOfYear() { const n = new Date(); return Math.floor((n - new Date(n.getFullYear(),0,0)) / 86400000); }
+
+function ensureShoutoutQR() {
+  const box = document.getElementById("so-qr");
+  if (soQrDone || typeof QRCode === "undefined") return;
+  try {
+    new QRCode(box, { text: location.origin + "/shoutout.html", width: 100, height: 100, correctLevel: QRCode.CorrectLevel.M });
+    box.style.display = "block"; soQrDone = true;
+  } catch (e) {}
+}
+
+async function fetchForecast() {
+  if (OPENWEATHER_KEY.indexOf("YOUR-") === 0) return;
+  try {
+    const url = "https://api.openweathermap.org/data/2.5/forecast?lat=" + WEATHER_LAT + "&lon=" + WEATHER_LON + "&units=imperial&appid=" + OPENWEATHER_KEY;
+    const r = await fetch(url); if (!r.ok) throw new Error(); const d = await r.json();
+    const byDay = {};
+    (d.list || []).forEach(function (row) {
+      const dt = new Date(row.dt * 1000), key = dt.toDateString();
+      if (!byDay[key]) byDay[key] = { date: dt, hi: -999, lo: 999, icons: {} };
+      byDay[key].hi = Math.max(byDay[key].hi, row.main.temp_max);
+      byDay[key].lo = Math.min(byDay[key].lo, row.main.temp_min);
+      const em = weatherEmoji(row.weather && row.weather[0] && row.weather[0].id, row.weather && row.weather[0] && row.weather[0].icon);
+      byDay[key].icons[em] = (byDay[key].icons[em] || 0) + 1;
+    });
+    forecastDays = Object.keys(byDay).slice(0, 5).map(function (k) {
+      const v = byDay[k];
+      const icon = Object.keys(v.icons).sort(function (a,b){ return v.icons[b] - v.icons[a]; })[0] || "⛅";
+      return { name: v.date.toLocaleDateString([], { weekday: "short" }), icon: icon, hi: Math.round(v.hi), lo: Math.round(v.lo) };
+    });
+  } catch (e) {}
+}
+function renderForecast() {
+  document.getElementById("forecast").innerHTML = forecastDays.map(function (f) {
+    return '<div class="day"><div class="dname">' + f.name + '</div><div class="dicon">' + f.icon + '</div><div class="dtemps">' + f.hi + '° <span class="lo">' + f.lo + '°</span></div></div>';
+  }).join("");
+}
+
+async function fetchNews() {
+  try {
+    const r = await fetch(RSS_TO_JSON + encodeURIComponent(NEWS_FEED));
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    if (d.status !== "ok") throw new Error();
+    newsItems = (d.items || []).slice(0, 10).map(function (it) {
+      let title = it.title || "", source = "";
+      const dash = title.lastIndexOf(" - ");
+      if (dash > 0) { source = title.slice(dash + 3); title = title.slice(0, dash); }
+      return { title: title, source: source };
+    }).filter(function (n) { return n.title; });
+  } catch (e) {}
+}
+
+async function fetchScores() {
+  const out = [];
+  for (let i = 0; i < SPORTS_TEAMS.length; i++) {
+    const t = SPORTS_TEAMS[i];
+    try {
+      const r = await fetch("https://site.api.espn.com/apis/site/v2/sports/" + t.path + "/teams/" + t.id);
+      if (!r.ok) continue;
+      const d = await r.json();
+      const ev = d.team && d.team.nextEvent && d.team.nextEvent[0];
+      if (!ev) continue;
+      const comp = ev.competitions && ev.competitions[0];
+      const state = comp && comp.status && comp.status.type && comp.status.type.state;
+      const when = new Date(ev.date);
+      let game = ev.shortName || ev.name || "", whenTxt = "";
+      if (state === "post" && comp) {
+        const parts = (comp.competitors || []).map(function (c) { return c.team.abbreviation + " " + (c.score && (c.score.value !== undefined ? c.score.value : c.score) || 0); });
+        game = parts.join(" — "); whenTxt = "Final";
+      } else if (state === "in") {
+        whenTxt = "Live now";
+      } else {
+        whenTxt = when.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }) + " · " + when.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      }
+      out.push({ label: t.label, icon: t.icon, game: game, when: whenTxt });
+    } catch (e) {}
+  }
+  scoreItems = out;
+}
+
+/* ---- Heartbeat (lets admin see the board is alive) ---- */
+async function beat() {
+  try {
+    await fetch(SUPABASE_URL + "/rest/v1/heartbeat?on_conflict=id", {
+      method: "POST",
+      headers: Object.assign({}, SB, { "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" }),
+      body: JSON.stringify({ id: 1, seen_at: new Date().toISOString() })
+    });
+  } catch (e) {}
 }
 
 /* ---- Weather ---- */
@@ -519,12 +761,16 @@ async function fetchStock() {
 }
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 
-refreshData(); fetchWeather(); fetchStock();
+refreshData(); fetchWeather(); fetchStock(); fetchForecast(); fetchNews(); fetchScores(); beat();
 setInterval(refreshData, MSG_REFRESH_SEC*1000);
 setInterval(rotateStrip, STRIP_ROTATE_SEC*1000);
 setInterval(fetchWeather, WEATHER_REFRESH_M*60*1000);
 setInterval(fetchStock, STOCK_REFRESH_M*60*1000);
 setInterval(refreshRadar, 10*60*1000);
+setInterval(fetchForecast, 60*60*1000);
+setInterval(fetchNews, 30*60*1000);
+setInterval(fetchScores, 30*60*1000);
+setInterval(beat, 60*1000);
 setTimeout(rotateStrip, 1500);
 
 if ("wakeLock" in navigator) {
