@@ -227,8 +227,7 @@
     </div>
     <div class="zone" id="zone-ticker">
       <div id="ticker" class="panel show">
-        <div><div class="sym" id="t-sym">APG</div><div class="price" id="t-price">--.--</div></div>
-        <div><div class="chg" id="t-chg">&mdash;</div><div class="label">Prev close</div><div class="label" id="t-prev" style="color:#9fb3c8;">--.--</div></div>
+        <div><div class="sym" id="t-sym">APG</div><div class="price" id="t-price">--.--</div><div class="chg" id="t-chg">&mdash;</div></div>
       </div>
     </div>
     <div class="zone" id="zone-rotate">
@@ -738,7 +737,7 @@ async function fetchWeather() {
     document.getElementById("w-temp").textContent = Math.round(d.main.temp) + "\u00B0";
     document.getElementById("w-cond").textContent = (d.weather && d.weather[0] && d.weather[0].description) || "";
     document.querySelector("#weather .icon").textContent = weatherEmoji(d.weather && d.weather[0] && d.weather[0].id, d.weather && d.weather[0] && d.weather[0].icon);
-    document.getElementById("w-extra").textContent = "Feels " + Math.round(d.main.feels_like) + "\u00B0 \u00B7 H " + Math.round(d.main.temp_max) + "\u00B0 / L " + Math.round(d.main.temp_min) + "\u00B0 \u00B7 Wind " + Math.round(d.wind.speed) + " mph";
+    document.getElementById("w-extra").textContent = "H " + Math.round(d.main.temp_max) + "\u00B0 / L " + Math.round(d.main.temp_min) + "\u00B0";
   } catch (e) {}
 }
 function weatherEmoji(id, icon) {
@@ -757,7 +756,6 @@ async function fetchStock() {
     const r = await fetch("https://finnhub.io/api/v1/quote?symbol=" + STOCK_SYMBOL + "&token=" + FINNHUB_KEY);
     if (!r.ok) throw new Error(); const d = await r.json(); if (!d.c) return;
     document.getElementById("t-price").textContent = "$" + d.c.toFixed(2);
-    document.getElementById("t-prev").textContent = "$" + d.pc.toFixed(2);
     const chg = document.getElementById("t-chg"); const up = d.d >= 0;
     chg.className = "chg " + (up ? "up" : "down");
     chg.textContent = (up ? "\u25B2" : "\u25BC") + " " + Math.abs(d.d).toFixed(2) + " (" + Math.abs(d.dp).toFixed(2) + "%)";
