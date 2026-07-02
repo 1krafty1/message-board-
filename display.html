@@ -36,8 +36,11 @@
   #emergency.pulse { animation: epulse 1.6s ease-in-out infinite; }
   @keyframes epulse { 0%,100% { background:#c0192b; } 50% { background:#9b1322; } }
 
-  header { flex: 0 0 auto; display: flex; align-items: baseline; justify-content: space-between; border-bottom: 2px solid #1b9aaa; padding: 3vh 5vw 2vh; z-index: 5; }
+  header { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #1b9aaa; padding: 2vh 5vw; z-index: 5; }
   header.hidden { display: none; }
+  header .brand { display: flex; align-items: center; gap: 1.5vw; }
+  header .logo { background: #fff; border-radius: 10px; padding: 0.8vh 1.2vh; display: flex; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  header .logo img { height: 5vh; display: block; }
   header .title { font-size: 3vh; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #5fd0df; text-shadow: 0 0 30px rgba(95,208,223,0.35); }
   header .right { display: flex; align-items: baseline; gap: 2vw; }
   header .date { font-size: 2.4vh; font-weight: 600; color: #6b8299; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -200,7 +203,10 @@
   </div>
 
   <header id="hdr">
-    <div class="title" id="board-name">Message Board</div>
+    <div class="brand">
+      <div class="logo"><img src="logo.jpg" alt="ICS"></div>
+      <div class="title" id="board-name">Message Board</div>
+    </div>
     <div class="right"><div class="date" id="hdr-date"></div><div class="clock" id="clock">--:--</div></div>
   </header>
 
