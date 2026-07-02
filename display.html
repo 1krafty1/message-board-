@@ -205,7 +205,6 @@
   <header id="hdr">
     <div class="brand">
       <div class="logo"><img src="logo.jpg" alt="ICS"></div>
-      <div class="title" id="board-name">Message Board</div>
     </div>
     <div class="right"><div class="date" id="hdr-date"></div><div class="clock" id="clock">--:--</div></div>
   </header>
@@ -318,7 +317,6 @@ const QUOTES = [
 ];
 /* ============================================================ */
 
-document.getElementById("board-name").textContent = BOARD_NAME;
 document.getElementById("w-place").textContent = WEATHER_PLACE;
 document.getElementById("t-sym").textContent = STOCK_SYMBOL;
 const SB = { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY };
