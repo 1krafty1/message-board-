@@ -24,6 +24,8 @@
   #stage { height: 100vh; display: flex; flex-direction: column; position: relative; z-index: 1; }
   #nightdim { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 60s linear; z-index: 99; }
   #nightdim.on { opacity: 0.45; }
+  #blackout { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 3s linear; z-index: 100; }
+  #blackout.on { opacity: 1; }
 
   /* Emergency banner */
   #emergency {
@@ -277,6 +279,7 @@
 </div>
 <div id="ambient"></div>
 <div id="nightdim"></div>
+<div id="blackout"></div>
 
 <script>
 /* ============================================================ CONFIG */
@@ -290,6 +293,8 @@ const STOCK_SYMBOL = "APG";
 const MSG_REFRESH_SEC = 30, MSG_ROTATE_SEC = 12, PHOTO_ROTATE_SEC = 10;
 const STRIP_ROTATE_SEC = 10, WEATHER_REFRESH_M = 10, STOCK_REFRESH_M = 5;
 const NIGHT_DIM_START = 21, NIGHT_DIM_END = 6;   // dim screen between these hours (24h); set both to same value to disable
+// Overnight/weekend black screen. Board shows Mon-Fri between ON and OFF hours; black otherwise (incl. all weekend).
+const BLACKOUT_ON_HOUR = 6, BLACKOUT_OFF_HOUR = 19, BLACKOUT_WORKDAYS_ONLY = true;
 const NEWS_FEED = "https://news.google.com/rss/search?q=Grand+Forks+ND&hl=en-US&gl=US&ceid=US:en";
 const RSS_TO_JSON = "https://api.rss2json.com/v1/api.json?rss_url=";
 const SPORTS_TEAMS = [
@@ -335,6 +340,14 @@ function tickClock() {
   const h = now.getHours();
   const night = NIGHT_DIM_START !== NIGHT_DIM_END && (NIGHT_DIM_START > NIGHT_DIM_END ? (h >= NIGHT_DIM_START || h < NIGHT_DIM_END) : (h >= NIGHT_DIM_START && h < NIGHT_DIM_END));
   document.getElementById("nightdim").classList.toggle("on", night);
+  // Overnight / weekend black screen (keeps HDMI signal alive, just paints black)
+  const day = now.getDay(); // 0 Sun .. 6 Sat
+  const isWorkday = !BLACKOUT_WORKDAYS_ONLY || (day >= 1 && day <= 5);
+  const daytime = isWorkday && h >= BLACKOUT_ON_HOUR && h < BLACKOUT_OFF_HOUR;
+  document.getElementById("blackout").classList.toggle("on", !daytime);
+  // reload once each morning when the board wakes, to pick up any deployed updates
+  if (daytime && window.__wasBlack === true) location.reload();
+  window.__wasBlack = !daytime;
   // theme + holiday accents
   document.body.classList.toggle("light", settings.theme === "light");
   const mo = now.getMonth()+1, da = now.getDate();
