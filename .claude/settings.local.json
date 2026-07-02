@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where rpi-imager *)",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Program Files \\(x86\\)/**)",
+      "PowerShell(winget install -e --id RaspberryPiFoundation.RaspberryPiImager --accept-source-agreements --accept-package-agreements)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Program Files\",\"C:\\\\Program Files \\(x86\\)\",\"$env:LOCALAPPDATA\" -Recurse -Filter \"rpi-imager.exe\" -ErrorAction SilentlyContinue | Select-Object -First 5 FullName)",
+      "PowerShell(Start-Process \"C:\\\\Program Files\\\\Raspberry Pi Ltd\\\\Imager\\\\rpi-imager.exe\")",
+      "PowerShell(Get-Disk | Where-Object { $_.BusType -in 'USB','SD' } | Select-Object Number, FriendlyName, @{N='SizeGB';E={[math]::Round\\($_.Size/1GB,1\\)}}, BusType, OperationalStatus | Format-Table -AutoSize)",
+      "PowerShell(Get-Disk | Select-Object Number, FriendlyName, @{N='SizeGB';E={[math]::Round\\($_.Size/1GB,1\\)}}, BusType, IsBoot, IsSystem | Format-Table -AutoSize)",
+      "PowerShell(\\(Get-Command npx -ErrorAction SilentlyContinue\\)?.Source; \\(Get-Command python -ErrorAction SilentlyContinue\\)?.Source; \\(Get-Command node -ErrorAction SilentlyContinue\\)?.Source)",
+      "PowerShell($k=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJodHljbXJrcGp4bGZ4Z3lmZXRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MzcyNTcsImV4cCI6MjA5ODUxMzI1N30.OUOQy6ZBaiXK1rooQre-SLqQxOyqSc9qbU3RWIaQIwM\"; Invoke-RestMethod -Method Post -Uri \"https://rhtycmrkpjxlfxgyfete.supabase.co/rest/v1/messages\" -Headers @{apikey=$k; Authorization=\"Bearer $k\"; \"Content-Type\"=\"application/json\"; Prefer=\"return=representation\"} -Body '{\"text\":\"Welcome to the new message board! 🎉\",\"type\":\"success\",\"label\":\"TEST\",\"priority\":1}' | ConvertTo-Json)",
+      "PowerShell(try { Invoke-RestMethod \"https://api.openweathermap.org/data/2.5/weather?lat=47.9253&lon=-97.0329&units=imperial&appid=5d51c70c7031260a072ce1c7e75cb7c9\" | Select-Object -ExpandProperty main } catch { $_.Exception.Message })",
+      "PowerShell(Invoke-RestMethod \"https://finnhub.io/api/v1/quote?symbol=APG&token=d92q5t9r01qpou37pfmgd92q5t9r01qpou37pfn0\")",
+      "PowerShell($k=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJodHljbXJrcGp4bGZ4Z3lmZXRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MzcyNTcsImV4cCI6MjA5ODUxMzI1N30.OUOQy6ZBaiXK1rooQre-SLqQxOyqSc9qbU3RWIaQIwM\"; $png=[Convert]::FromBase64String\\(\"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==\"\\); Invoke-RestMethod -Method Post -Uri \"https://rhtycmrkpjxlfxgyfete.supabase.co/storage/v1/object/board-photos/test_upload.png\" -Headers @{apikey=$k; Authorization=\"Bearer $k\"; \"Content-Type\"=\"image/png\"} -Body $png; Invoke-WebRequest -Method Head \"https://rhtycmrkpjxlfxgyfete.supabase.co/storage/v1/object/public/board-photos/test_upload.png\" | Select-Object StatusCode)",
+      "PowerShell(\\(Invoke-WebRequest \"https://rhtycmrkpjxlfxgyfete.supabase.co/storage/v1/object/public/board-photos/test_upload.png\"\\).StatusCode)",
+      "PowerShell(\\(Get-Command git -ErrorAction SilentlyContinue\\)?.Source; \\(Get-Command gh -ErrorAction SilentlyContinue\\)?.Source)",
+      "PowerShell(git -C C:\\\\apps init 2>&1)",
+      "PowerShell(git -C C:\\\\apps add admin.html display.html SETUP-COMPLETE.md SETUP-all-in-one.sql pi-kiosk-extracted 2>&1)",
+      "PowerShell(git -C C:\\\\apps -c user.name=\"Randy Kraft\" -c user.email=\"randy.kraft@gmail.com\" commit -m \"Message board: display + admin pages, setup docs, pi kiosk scripts\" 2>&1)",
+      "PowerShell(git -C C:\\\\apps remote add origin https://github.com/1krafty1/message-board.git)",
+      "PowerShell(git -C C:\\\\apps branch -M main)",
+      "PowerShell(git -C C:\\\\apps push -u origin main 2>&1)",
+      "PowerShell(git -C C:\\\\apps remote set-url origin https://github.com/1krafty1/message-board-.git)",
+      "PowerShell(\\(Invoke-WebRequest \"https://message-board-rust-nine.vercel.app/display.html\"\\).StatusCode; \\(Invoke-WebRequest \"https://message-board-rust-nine.vercel.app/admin.html\"\\).StatusCode)",
+      "PowerShell(Get-Volume | Where-Object DriveLetter | Select-Object DriveLetter, FileSystemLabel, FileSystem, @{n='SizeGB';e={[math]::Round\\($_.Size/1GB,1\\)}} | Format-Table)",
+      "PowerShell(Get-Partition -DiskNumber 1 -PartitionNumber 1 | Add-PartitionAccessPath -AssignDriveLetter; \\(Get-Partition -DiskNumber 1 -PartitionNumber 1\\).DriveLetter)",
+      "PowerShell(Start-Process powershell -Verb RunAs -Wait -ArgumentList '-Command','Get-Partition -DiskNumber 1 -PartitionNumber 1 | Add-PartitionAccessPath -AssignDriveLetter'; Start-Sleep 2; \\(Get-Partition -DiskNumber 1 -PartitionNumber 1\\).DriveLetter)",
+      "PowerShell(git -C C:\\\\apps add -A)",
+      "PowerShell(git -C C:\\\\apps -c user.name=\"Randy Kraft\" -c user.email=\"randy.kraft@gmail.com\" commit -m \"Visual redesign: glass message card with type-tinted accent, 3-zone strip \\(weather + ticker always visible\\), ambient drift, night dim, progress dots, admin live preview\" 2>&1)",
+      "PowerShell(git -C C:\\\\apps push 2>&1)"
+    ]
+  }
+}

@@ -13,13 +13,15 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; background: #0d1b2a; color: #e8eef5; font-family: "Inter","Segoe UI",system-ui,sans-serif; overflow: hidden; cursor: none; }
-  body {
+  body { background: linear-gradient(180deg, #0e1d2e 0%, #0a1522 100%); }
+  #ambient { position: fixed; inset: -20%; pointer-events: none; z-index: 0;
     background:
-      radial-gradient(120vh 90vh at 15% -10%, rgba(27,154,170,0.14), transparent 60%),
-      radial-gradient(100vh 80vh at 90% 110%, rgba(27,154,170,0.10), transparent 55%),
-      linear-gradient(180deg, #0e1d2e 0%, #0a1522 100%);
+      radial-gradient(120vh 90vh at 20% 10%, rgba(27,154,170,0.16), transparent 60%),
+      radial-gradient(100vh 80vh at 85% 90%, rgba(31,74,140,0.18), transparent 55%);
+    animation: drift 90s ease-in-out infinite alternate;
   }
-  #stage { height: 100vh; display: flex; flex-direction: column; }
+  @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(4%, -3%) scale(1.08); } }
+  #stage { height: 100vh; display: flex; flex-direction: column; position: relative; z-index: 1; }
   #nightdim { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 60s linear; z-index: 99; }
   #nightdim.on { opacity: 0.45; }
 
@@ -46,7 +48,14 @@
   .view.show { display: flex; }
 
   #view-messages { flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 3vh; padding: 4vh 5vw; }
-  .msg { width: 100%; max-width: 90vw; display: flex; flex-direction: column; align-items: center; gap: 2.5vh; }
+  .msg { width: 100%; max-width: 84vw; display: flex; flex-direction: column; align-items: center; gap: 2.5vh;
+    background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.07); border-radius: 24px;
+    padding: 6vh 5vw; box-shadow: 0 20px 60px rgba(0,0,0,0.35); position: relative; overflow: hidden; }
+  .msg::before { content: ""; position: absolute; top: 0; left: 15%; right: 15%; height: 3px; border-radius: 3px; background: var(--accent, #5fd0df); box-shadow: 0 0 40px 6px var(--accent-glow, rgba(95,208,223,0.35)); }
+  .msg.info    { --accent: #5fd0df; --accent-glow: rgba(95,208,223,0.35); }
+  .msg.success { --accent: #7affa0; --accent-glow: rgba(122,255,160,0.30); }
+  .msg.notice  { --accent: #ffe07a; --accent-glow: rgba(255,224,122,0.30); }
+  .msg.alert   { --accent: #ff7a7a; --accent-glow: rgba(255,122,122,0.35); }
   .msg .pin { display: inline-block; font-size: 2.2vh; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.6vh 1.6vh; border-radius: 999px; }
   .pin.info { background: #143b4a; color: #5fd0df; }
   .pin.alert { background: #4a1f1f; color: #ff7a7a; }
@@ -78,45 +87,48 @@
   #view-photobg .overlay .pin { display: inline-block; font-size: 2.2vh; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.6vh 1.6vh; border-radius: 999px; margin-bottom: 2.5vh; }
   #view-photobg .overlay .text { font-size: 7vh; line-height: 1.12; font-weight: 800; text-shadow: 0 2px 24px rgba(0,0,0,0.6); }
 
-  #strip { flex: 0 0 auto; height: 16vh; border-top: 2px solid #1b9aaa; display: flex; align-items: center; padding: 0 5vw; background: #0a1622; overflow: hidden; }
+  #strip { flex: 0 0 auto; height: 16vh; border-top: 1px solid rgba(95,208,223,0.25); display: flex; align-items: stretch; background: rgba(8,17,28,0.65); overflow: hidden; }
   #strip.hidden { display: none; }
-  .panel { width: 100%; display: none; align-items: center; gap: 4vw; }
+  .zone { flex: 1; display: flex; align-items: center; gap: 1.8vw; padding: 0 2.5vw; border-right: 1px solid rgba(255,255,255,0.06); min-width: 0; }
+  .zone.hidden { display: none; }
+  #zone-rotate { flex: 1.5; border-right: none; position: relative; }
+  .panel { width: 100%; display: none; align-items: center; gap: 2.5vw; }
   .panel.show { display: flex; }
-  #weather .icon { font-size: 9vh; line-height: 1; }
-  #weather .temp { font-size: 8vh; font-weight: 700; font-variant-numeric: tabular-nums; }
-  #weather .cond { font-size: 3vh; color: #9fb3c8; text-transform: capitalize; }
-  #weather .extra { font-size: 2.4vh; color: #6b8299; margin-top: 0.5vh; }
-  #weather .place { font-size: 2.4vh; color: #5fd0df; text-transform: uppercase; letter-spacing: 0.06em; }
-  #ticker .sym { font-size: 3vh; font-weight: 700; color: #5fd0df; letter-spacing: 0.05em; }
-  #ticker .price { font-size: 8vh; font-weight: 700; font-variant-numeric: tabular-nums; }
-  #ticker .chg { font-size: 4vh; font-weight: 600; font-variant-numeric: tabular-nums; }
+  #weather .icon { font-size: 7vh; line-height: 1; }
+  #weather .temp { font-size: 6vh; font-weight: 700; font-variant-numeric: tabular-nums; }
+  #weather .cond { font-size: 2.4vh; color: #9fb3c8; text-transform: capitalize; }
+  #weather .extra { font-size: 1.9vh; color: #6b8299; margin-top: 0.4vh; }
+  #weather .place { font-size: 2vh; color: #5fd0df; text-transform: uppercase; letter-spacing: 0.06em; }
+  #ticker .sym { font-size: 2.4vh; font-weight: 700; color: #5fd0df; letter-spacing: 0.05em; }
+  #ticker .price { font-size: 5.5vh; font-weight: 700; font-variant-numeric: tabular-nums; }
+  #ticker .chg { font-size: 2.8vh; font-weight: 600; font-variant-numeric: tabular-nums; }
   #ticker .chg.up { color: #7affa0; } #ticker .chg.down { color: #ff7a7a; }
-  #ticker .label { font-size: 2.2vh; color: #6b8299; text-transform: uppercase; letter-spacing: 0.06em; }
-  #welcome { justify-content: center; }
-  #welcome .wave { font-size: 8vh; line-height: 1; }
-  #welcome .wtext { font-size: 6vh; font-weight: 700; }
+  #ticker .label { font-size: 1.8vh; color: #6b8299; text-transform: uppercase; letter-spacing: 0.06em; }
+  #welcome { justify-content: flex-start; }
+  #welcome .wave { font-size: 6vh; line-height: 1; }
+  #welcome .wtext { font-size: 4.2vh; font-weight: 700; }
   #welcome .wtext .name { color: #5fd0df; }
-  #welcome .wsub { font-size: 2.6vh; color: #9fb3c8; margin-top: 0.5vh; }
-  #countdown { justify-content: center; gap: 3vw; }
-  #countdown .num { font-size: 9vh; font-weight: 800; color: #5fd0df; font-variant-numeric: tabular-nums; }
-  #countdown .unit { font-size: 3vh; color: #9fb3c8; text-transform: uppercase; letter-spacing: 0.06em; }
-  #countdown .clabel { font-size: 3.4vh; font-weight: 600; }
-  #birthday { justify-content: center; gap: 3vw; }
-  #birthday .cake { font-size: 8vh; line-height: 1; }
-  #birthday .btext { font-size: 5vh; font-weight: 700; }
+  #welcome .wsub { font-size: 2.2vh; color: #9fb3c8; margin-top: 0.5vh; }
+  #countdown { justify-content: flex-start; gap: 2vw; }
+  #countdown .num { font-size: 7vh; font-weight: 800; color: #5fd0df; font-variant-numeric: tabular-nums; }
+  #countdown .unit { font-size: 2.4vh; color: #9fb3c8; text-transform: uppercase; letter-spacing: 0.06em; }
+  #countdown .clabel { font-size: 2.8vh; font-weight: 600; }
+  #birthday { justify-content: flex-start; gap: 2vw; }
+  #birthday .cake { font-size: 6vh; line-height: 1; }
+  #birthday .btext { font-size: 4vh; font-weight: 700; }
   #birthday .btext .bname { color: #ffe07a; }
-  #birthday .bsub { font-size: 2.6vh; color: #9fb3c8; margin-top: 0.5vh; }
-  #radar { justify-content: flex-start; gap: 3vw; }
+  #birthday .bsub { font-size: 2.2vh; color: #9fb3c8; margin-top: 0.5vh; }
+  #radar { justify-content: flex-start; gap: 2vw; }
   #radar .map { width: 22vh; height: 13vh; border-radius: 8px; overflow: hidden; flex: 0 0 auto; border: 1px solid #1b9aaa; }
   #radar .rlabel { font-size: 2.6vh; font-weight: 600; color: #5fd0df; text-transform: uppercase; letter-spacing: 0.06em; }
   #radar .rsub { font-size: 2.2vh; color: #6b8299; margin-top: 0.5vh; }
   .leaflet-control-attribution, .leaflet-control-zoom { display: none !important; }
-  #shoutout { justify-content: flex-start; gap: 3vw; }
-  #shoutout .star { font-size: 8vh; line-height: 1; }
-  #shoutout .slabel { font-size: 2.2vh; font-weight: 700; color: #ffe07a; text-transform: uppercase; letter-spacing: 0.08em; }
-  #shoutout .srecipient { font-size: 4.6vh; font-weight: 800; color: #fff; line-height: 1.1; }
-  #shoutout .smsg { font-size: 2.8vh; color: #cfe0ee; margin-top: 0.5vh; max-width: 70vw; }
-  #shoutout .sfrom { font-size: 2.2vh; color: #6b8299; margin-top: 0.5vh; font-style: italic; }
+  #shoutout { justify-content: flex-start; gap: 2vw; }
+  #shoutout .star { font-size: 6vh; line-height: 1; }
+  #shoutout .slabel { font-size: 1.9vh; font-weight: 700; color: #ffe07a; text-transform: uppercase; letter-spacing: 0.08em; }
+  #shoutout .srecipient { font-size: 3.6vh; font-weight: 800; color: #fff; line-height: 1.1; }
+  #shoutout .smsg { font-size: 2.3vh; color: #cfe0ee; margin-top: 0.5vh; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  #shoutout .sfrom { font-size: 1.9vh; color: #6b8299; margin-top: 0.5vh; font-style: italic; }
 
   .fade-in { animation: fadeIn 0.5s forwards; }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -148,16 +160,21 @@
   </div>
 
   <div id="strip" class="hidden">
-    <div class="panel" id="weather">
-      <div class="icon">&#9925;</div>
-      <div><div class="place" id="w-place">Grand Forks</div>
-        <div style="display:flex; align-items:baseline; gap:1.5vw;"><span class="temp" id="w-temp">--&deg;</span><span class="cond" id="w-cond">&mdash;</span></div>
-        <div class="extra" id="w-extra"></div></div>
+    <div class="zone" id="zone-weather">
+      <div id="weather" class="panel show">
+        <div class="icon">&#9925;</div>
+        <div><div class="place" id="w-place">Grand Forks</div>
+          <div style="display:flex; align-items:baseline; gap:1vw;"><span class="temp" id="w-temp">--&deg;</span><span class="cond" id="w-cond">&mdash;</span></div>
+          <div class="extra" id="w-extra"></div></div>
+      </div>
     </div>
-    <div class="panel" id="ticker">
-      <div class="sym" id="t-sym">APG</div><div class="price" id="t-price">--.--</div><div class="chg" id="t-chg">&mdash;</div>
-      <div><div class="label">Prev close</div><div class="label" id="t-prev" style="color:#9fb3c8;">--.--</div></div>
+    <div class="zone" id="zone-ticker">
+      <div id="ticker" class="panel show">
+        <div><div class="sym" id="t-sym">APG</div><div class="price" id="t-price">--.--</div></div>
+        <div><div class="chg" id="t-chg">&mdash;</div><div class="label">Prev close</div><div class="label" id="t-prev" style="color:#9fb3c8;">--.--</div></div>
+      </div>
     </div>
+    <div class="zone" id="zone-rotate">
     <div class="panel" id="welcome">
       <div class="wave">&#128075;</div>
       <div><div class="wtext">Welcome, <span class="name" id="wel-name">&mdash;</span></div><div class="wsub" id="wel-sub"></div></div>
@@ -181,8 +198,10 @@
         <div class="smsg" id="so-msg"></div>
         <div class="sfrom" id="so-from"></div></div>
     </div>
+    </div>
   </div>
 </div>
+<div id="ambient"></div>
 <div id="nightdim"></div>
 
 <script>
@@ -352,7 +371,7 @@ function rotateMessage() {
   if (msgIdx >= messages.length) msgIdx = 0;
   const m = messages[msgIdx];
   const created = m.created_at ? new Date(m.created_at).toLocaleDateString([], {month:"short", day:"numeric"}) : "";
-  host.innerHTML = '<div class="msg fade-in">' + pinHtml(m) + '<div class="text">' + esc(m.text) + '</div>' + (created ? '<div class="meta">' + created + '</div>' : "") + '</div>';
+  host.innerHTML = '<div class="msg fade-in ' + (m.type || 'info') + '">' + pinHtml(m) + '<div class="text">' + esc(m.text) + '</div>' + (created ? '<div class="meta">' + created + '</div>' : "") + '</div>';
   if (m.qr_url) renderQR(host.querySelector(".msg"), m.qr_url);
   renderDots();
   msgTimer = setTimeout(function (){ msgIdx = (msgIdx+1) % messages.length; rotateMessage(); }, MSG_ROTATE_SEC*1000);
@@ -398,22 +417,22 @@ function todaysBirthdays() {
 }
 function buildStrip() {
   stripOrder = [];
-  if (settings.show_weather) stripOrder.push("weather");
-  if (settings.show_ticker) stripOrder.push("ticker");
   if (settings.show_radar) stripOrder.push("radar");
   if (settings.show_shoutouts && shoutouts.length) stripOrder.push("shoutout");
   if (settings.show_welcomes && welcomes.length) stripOrder.push("welcome");
   if (settings.show_countdown && settings.countdown_date) stripOrder.push("countdown");
   if (settings.show_birthdays && todaysBirthdays().length) stripOrder.push("birthday");
+  document.getElementById("zone-weather").classList.toggle("hidden", !settings.show_weather);
+  document.getElementById("zone-ticker").classList.toggle("hidden", !settings.show_ticker);
+  document.getElementById("zone-rotate").classList.toggle("hidden", !stripOrder.length);
   const strip = document.getElementById("strip");
-  if (!stripOrder.length || effectiveLayout() !== "messages") {
-    strip.classList.add("hidden"); document.querySelectorAll(".panel").forEach(function (p){ p.classList.remove("show"); });
-  } else strip.classList.remove("hidden");
+  const anything = settings.show_weather || settings.show_ticker || stripOrder.length;
+  strip.classList.toggle("hidden", !anything || effectiveLayout() !== "messages");
 }
 let bdIdx = 0;
 function rotateStrip() {
   if (effectiveLayout() !== "messages" || !stripOrder.length) return;
-  document.querySelectorAll(".panel").forEach(function (p){ p.classList.remove("show"); });
+  document.querySelectorAll("#zone-rotate .panel").forEach(function (p){ p.classList.remove("show"); });
   const panel = stripOrder[stripIdx % stripOrder.length];
   if (panel === "welcome") {
     if (welcomes.length) { const w = welcomes[welIdx % welcomes.length];
